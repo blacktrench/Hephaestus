@@ -1,0 +1,16 @@
+{
+  "Nickname": "Hephaestus",
+  "Visibility": "Visible",
+  "OneLineDescription": "Have more verticality in NPC and creature heights",
+  "LongDescription": "Randomizes the height of all NPCs in a deterministic manner. The patcher can be configured with a minimum and maximum value for each race and gender of that race and comes by default with most of the basic human races pre-configured.",
+  "PreferredAutoVersioning": "Default",
+  "RequiredMods": [],
+  "TargetedReleases": [
+    "SkyrimLE",
+    "SkyrimSE",
+    "SkyrimVR",
+    "EnderalLE",
+    "EnderalSE",
+    "SkyrimSEGog"
+  ]
+}
