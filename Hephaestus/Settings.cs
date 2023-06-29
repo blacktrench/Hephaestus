@@ -20,11 +20,15 @@ namespace Hephaestus
     }
     public class Settings
     {
-        // Your new setting for height randomization seed
         [SynthesisSettingName("Seed")]
         [SynthesisDescription("The seed used for randomizing the height of NPCs.")]
         [SynthesisTooltip("A higher seed value will result in more variation in height.")]
         public int HeightSeed { get; set; } = 100000;
+
+        [SynthesisSettingName("Drop chance")]
+        [SynthesisDescription("Goes from 0 to 100, it affects how likely schematics are to drop")]
+        [SynthesisTooltip("Goes from 0 to 100, it affects how likely schematics are to drop")]
+        public int DropChance { get; set; } = 20;
 
         // A dictionary to store the settings for each race and gender
         // The key is a string of the form "Race", e.g. "NordRace"

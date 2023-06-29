@@ -37,10 +37,6 @@ namespace Hephaestus
             Console.WriteLine("");
 
             // **Main Mechanic**
-
-            // 4. We set this book item to be required for the COBJ so the player needs the schematic/recipe on them to have the option;
-            // 5. We make a leveled list A for each item with an 90% chance to not drop anything, and another one B with a 50% chance to not drop anything;
-            // 6. We look for instances of the OG item in leveled lists and inject the leveled list A from the last step in, if it's anything but a merchant, and B if it's a merchant (without removing the entry for the og item);
             // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
 
             // Loop through all the COBJ records in the load order
@@ -50,6 +46,17 @@ namespace Hephaestus
                 if (!cobj.CreatedObject.TryResolve(state.LinkCache, out var createdItem)) continue;
                 if (createdItem is not INamedGetter namedObj || createdItem is not IWeightValueGetter weightValue) continue;
                 if (cobj.Items is null) continue;
+
+                var leveledLists = new List<LeveledItem>();
+
+                // Look up LVLI with item
+                foreach (var leveledList in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides())
+                {
+                    // Check if the leveled list contains the item
+                    if (leveledList.Entries != null && leveledList.Entries.Any(e => e.Data?.Reference.FormKey == createdItem.FormKey)) {
+                        leveledLists.Add(leveledList.DeepCopy());
+                    } else continue;
+                }
 
                 // Deterministic seed
                 var seed = cobj.FormKey.ID.GetHashCode();
@@ -67,7 +74,8 @@ namespace Hephaestus
                 string? objEditorID = createdItem.EditorID;
                 uint objValue = weightValue.Value;
 
-                // Base Flavour
+                // Book variables
+                Book book;
                 string? objBench;
                 string? processName;
                 string? schematicType = "Schematic";
@@ -147,28 +155,37 @@ namespace Hephaestus
                     requiredItems += $"{namedItem?.Name}\n";
                 };
                 
-                var bookTextTemplate = $"{objName} {schematicType}\n\nMaterials needed:\n{requiredItems}\nThis {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
+                // Assigning flavour data
+                var bookTextTemplate = $"{objName} {schematicType}\n\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
+                var bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
 
+                // Check if a schematic with the same editor ID already exists
+                if (state.PatchMod.Books.Any(l => l.EditorID == bookEditorIDTemplate))
+                {
+                    book = state.PatchMod.Books.First(e => e.EditorID == bookEditorIDTemplate);
+                }
+                else {
 
-                // Create a new book record
-                var book = state.PatchMod.Books.AddNew(cobj.EditorID);
+                    // create a new book
+                    book = state.PatchMod.Books.AddNew(objEditorID);
 
-                // Set the book properties
-                book.EditorID = $"{objEditorID}_{schematicType}";
-                book.Name = $"{objType} {schematicType}: {objName}";
-                book.Value = objValue * 5;
-                book.Weight = 0.1f;
-                book.Model = objModel;
-                // book.InventoryArt = objInvArt;
-                book.ObjectBounds = objBounds;
-                book.BookText = bookTextTemplate;
-                book.Type = Book.BookType.NoteOrScroll;
+                    // Set the book properties
+                    book.EditorID = bookEditorIDTemplate;
+                    book.Name = $"{objType} {schematicType}: {objName}";
+                    book.Value = objValue * 5;
+                    book.Weight = 0.1f;
+                    book.Model = objModel;
+                    // book.InventoryArt = objInvArt;
+                    book.ObjectBounds = objBounds;
+                    book.BookText = bookTextTemplate;
+                    book.Type = Book.BookType.NoteOrScroll;
 
-                Console.WriteLine($"{objType} {schematicType}: {objName}");
-                Console.WriteLine(bookTextTemplate);
-                Console.WriteLine("");
-                Console.WriteLine("=================================================");
-                Console.WriteLine("");
+                    Console.WriteLine(book.Name);
+                    Console.WriteLine(book.BookText);
+                    Console.WriteLine("");
+                    Console.WriteLine("=================================================");
+                    Console.WriteLine("");
+                };
 
                 // Create a new COBJ record with the modified height and add it to the output mod
                 var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
@@ -182,9 +199,62 @@ namespace Hephaestus
                     ComparisonValue = 1,
                     CompareOperator = CompareOperator.GreaterThanOrEqualTo,
                     Data = newCond
-
-
                 });
+
+                // Add schematic to LVLI
+                foreach (var leveledList in leveledLists)
+                {
+                    
+                    // Get the existing entry of the item
+                    var existingEntry = leveledList.Entries?.First(e => e.Data?.Reference.FormKey == createdItem.FormKey);
+
+                    var existingEntryRecord = existingEntry?.Data?.Reference.TryResolve(state.LinkCache);
+
+                    // Get the level of the existing entry
+                    var existingLevel = existingEntry?.Data?.Level ?? 1;
+                    
+                    var bookEntry = new LeveledItemEntry()
+                    {
+                        Data = new LeveledItemEntryData() {
+                            Reference = new FormLink<IItemGetter>(book.FormKey),
+                            Level = 1,
+                            Count = 1
+                        }
+                    };
+
+                    LeveledItem dropList;
+
+                    // Get the existing entry of the item
+                    // Check if a leveled list with the same editor ID already exists
+                    if (state.PatchMod.LeveledItems.Any(l => l.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"))
+                    {
+                        dropList = state.PatchMod.LeveledItems.First(e => e.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}");
+                    }
+                    else {
+                        // Create leveled list for each item with a user customizable drop chance
+                        dropList = state.PatchMod.LeveledItems.AddNew();
+                        dropList.ChanceNone = (byte)(100 - settings.DropChance);
+                        dropList.EditorID = $"{objEditorID}_{schematicType}_Lv{existingLevel}";
+                        dropList.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                        dropList.Entries.Add(bookEntry);
+                    };
+
+                    // Create a new entry with the new item and the same level
+                    var newEntry = new LeveledItemEntry()
+                    {
+                        Data = new LeveledItemEntryData() {
+                            Reference = new FormLink<IItemGetter>(dropList),
+                            Level = existingLevel,
+                            Count = 1
+                        }
+                    };
+
+                    var modifiedLvli = state.PatchMod.LeveledItems.GetOrAddAsOverride(leveledList);
+
+                    // Add the new entry to the leveled list
+                    if (modifiedLvli.Entries == null) modifiedLvli.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                    modifiedLvli.Entries.Add(newEntry);
+                }
             }
 
             Console.WriteLine("");
