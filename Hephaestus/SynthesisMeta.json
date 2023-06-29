@@ -1,8 +1,8 @@
 {
   "Nickname": "Hephaestus",
-  "Visibility": "Visible",
-  "OneLineDescription": "Have more verticality in NPC and creature heights",
-  "LongDescription": "Randomizes the height of all NPCs in a deterministic manner. The patcher can be configured with a minimum and maximum value for each race and gender of that race and comes by default with most of the basic human races pre-configured.",
+  "Visibility": "Exclude",
+  "OneLineDescription": "Make crafting more 'fun' by requiring schematics and then putting those in loot!",
+  "LongDescription": "Makes every craftable lootable item require a schematic/recipe in your inventory before being able to craft them. The schematic/recipe shows up in the same places that the base item would (on NPCs, in shops, in chests) with a customizable drop chance.",
   "PreferredAutoVersioning": "Default",
   "RequiredMods": [],
   "TargetedReleases": [

@@ -14,10 +14,10 @@ namespace Hephaestus
     public class Program
     {
         static Lazy<Settings> _settings = null!;
-        static public Settings settings => _settings.Value;
+        public static Settings settings => _settings.Value;
+
         public static async Task<int> Main(string[] args)
         {
-
             // Run the patcher
             return await SynthesisPipeline.Instance
                 .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
@@ -29,7 +29,6 @@ namespace Hephaestus
         // A method to run the patch on a given load order
         private static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-
             Console.WriteLine("");
             Console.WriteLine("=================================================");
             Console.WriteLine("Starting COBJ Patching...");
@@ -40,22 +39,43 @@ namespace Hephaestus
             // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
 
             // Loop through all the COBJ records in the load order
-            foreach (IConstructibleObjectGetter cobj in state.LoadOrder.PriorityOrder.ConstructibleObject().WinningOverrides())
+            foreach (
+                IConstructibleObjectGetter cobj in state.LoadOrder.PriorityOrder
+                    .ConstructibleObject()
+                    .WinningOverrides()
+            )
             {
-
-                if (!cobj.CreatedObject.TryResolve(state.LinkCache, out var createdItem)) continue;
-                if (createdItem is not INamedGetter namedObj || createdItem is not IWeightValueGetter weightValue) continue;
-                if (cobj.Items is null) continue;
+                if (!cobj.CreatedObject.TryResolve(state.LinkCache, out var createdItem))
+                    continue;
+                if (
+                    createdItem is not INamedGetter namedObj
+                    || createdItem is not IWeightValueGetter weightValue
+                )
+                    continue;
+                if (cobj.Items is null)
+                    continue;
 
                 var leveledLists = new List<LeveledItem>();
 
                 // Look up LVLI with item
-                foreach (var leveledList in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides())
+                foreach (
+                    var leveledList in state.LoadOrder.PriorityOrder
+                        .LeveledItem()
+                        .WinningOverrides()
+                )
                 {
                     // Check if the leveled list contains the item
-                    if (leveledList.Entries != null && leveledList.Entries.Any(e => e.Data?.Reference.FormKey == createdItem.FormKey)) {
+                    if (
+                        leveledList.Entries != null
+                        && leveledList.Entries.Any(
+                            e => e.Data?.Reference.FormKey == createdItem.FormKey
+                        )
+                    )
+                    {
                         leveledLists.Add(leveledList.DeepCopy());
-                    } else continue;
+                    }
+                    else
+                        continue;
                 }
 
                 // Deterministic seed
@@ -82,7 +102,8 @@ namespace Hephaestus
                 string? requiredItems = string.Empty;
                 var aAn = "a";
                 char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' };
-                if (objName?.IndexOfAny(vowels) == 0) aAn = "an";
+                if (objName?.IndexOfAny(vowels) == 0)
+                    aAn = "an";
 
                 // Set values based on bench
                 if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingSmithingForge.FormKey)
@@ -100,13 +121,19 @@ namespace Hephaestus
                     if (createdItem is IArmorGetter armorObj)
                     {
                         var flagToCheck = armorObj.BodyTemplate;
-                        if (flagToCheck == null) continue;
-                        else if (flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Hands) || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Feet))
+                        if (flagToCheck == null)
+                            continue;
+                        else if (
+                            flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Hands)
+                            || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Feet)
+                        )
                         {
                             aAn = "a pair of";
                         }
-                        
-                        else if (flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Circlet) || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Ring))
+                        else if (
+                            flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Circlet)
+                            || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Ring)
+                        )
                         {
                             objType = "Jewelry";
                         }
@@ -117,7 +144,9 @@ namespace Hephaestus
                         }
                     }
                 }
-                else if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingTanningRack.FormKey)
+                else if (
+                    cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingTanningRack.FormKey
+                )
                 {
                     objBench = "Tanning Rack";
                     processName = "tanning";
@@ -135,10 +164,12 @@ namespace Hephaestus
                         _ => objType = "Food"
                     };
                 }
-                else continue;
+                else
+                    continue;
 
                 // Building the flavour text
-                string[] flavourText = {
+                string[] flavourText =
+                {
                     $"looks like the notes of a madman, though I can somewhat decypher it. It seems to detail the process of",
                     $"seems to have been teared off from someone's journal. It seems to explain the process of",
                     $"seems to have been written by an apprentice, from the looks of it it describes the process of",
@@ -146,17 +177,21 @@ namespace Hephaestus
                     $"contains the secrets to",
                     $"is filled with scribbles and notes on the steps of",
                     $"still has some stains of blood on it, it describes the process of"
-                    };
-                    
+                };
+
                 foreach (var reqItem in cobj.Items)
                 {
-                    if (!reqItem.Item.Item.TryResolve(state.LinkCache, out var reqItemObj)) continue;
-                    if (reqItemObj is not INamedGetter namedItem) continue;
+                    if (!reqItem.Item.Item.TryResolve(state.LinkCache, out var reqItemObj))
+                        continue;
+                    if (reqItemObj is not INamedGetter namedItem)
+                        continue;
                     requiredItems += $"{namedItem?.Name}\n";
-                };
-                
+                }
+                ;
+
                 // Assigning flavour data
-                var bookTextTemplate = $"{objName} {schematicType}\n\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
+                var bookTextTemplate =
+                    $"{objName} {schematicType}\n\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
                 var bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
 
                 // Check if a schematic with the same editor ID already exists
@@ -164,8 +199,8 @@ namespace Hephaestus
                 {
                     book = state.PatchMod.Books.First(e => e.EditorID == bookEditorIDTemplate);
                 }
-                else {
-
+                else
+                {
                     // create a new book
                     book = state.PatchMod.Books.AddNew(objEditorID);
 
@@ -180,12 +215,16 @@ namespace Hephaestus
                     book.BookText = bookTextTemplate;
                     book.Type = Book.BookType.NoteOrScroll;
 
-                    Console.WriteLine(book.Name);
-                    Console.WriteLine(book.BookText);
-                    Console.WriteLine("");
-                    Console.WriteLine("=================================================");
-                    Console.WriteLine("");
-                };
+                    if (settings.ShowDebugLogs)
+                    {
+                        Console.WriteLine(book.Name);
+                        Console.WriteLine(book.BookText);
+                        Console.WriteLine("");
+                        Console.WriteLine("=================================================");
+                        Console.WriteLine("");
+                    }
+                }
+                ;
 
                 // Create a new COBJ record with the modified height and add it to the output mod
                 var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
@@ -194,28 +233,34 @@ namespace Hephaestus
                 newCond.ItemOrList.Link.SetTo(book);
                 newCond.RunOnType = Condition.RunOnType.Subject;
 
-                modifiedCobj.Conditions.Add(new ConditionFloat()
-                {
-                    ComparisonValue = 1,
-                    CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                    Data = newCond
-                });
+                modifiedCobj.Conditions.Add(
+                    new ConditionFloat()
+                    {
+                        ComparisonValue = 1,
+                        CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                        Data = newCond
+                    }
+                );
 
                 // Add schematic to LVLI
                 foreach (var leveledList in leveledLists)
                 {
-                    
                     // Get the existing entry of the item
-                    var existingEntry = leveledList.Entries?.First(e => e.Data?.Reference.FormKey == createdItem.FormKey);
+                    var existingEntry = leveledList.Entries?.First(
+                        e => e.Data?.Reference.FormKey == createdItem.FormKey
+                    );
 
-                    var existingEntryRecord = existingEntry?.Data?.Reference.TryResolve(state.LinkCache);
+                    var existingEntryRecord = existingEntry?.Data?.Reference.TryResolve(
+                        state.LinkCache
+                    );
 
                     // Get the level of the existing entry
                     var existingLevel = existingEntry?.Data?.Level ?? 1;
-                    
+
                     var bookEntry = new LeveledItemEntry()
                     {
-                        Data = new LeveledItemEntryData() {
+                        Data = new LeveledItemEntryData()
+                        {
                             Reference = new FormLink<IItemGetter>(book.FormKey),
                             Level = 1,
                             Count = 1
@@ -226,23 +271,32 @@ namespace Hephaestus
 
                     // Get the existing entry of the item
                     // Check if a leveled list with the same editor ID already exists
-                    if (state.PatchMod.LeveledItems.Any(l => l.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"))
+                    if (
+                        state.PatchMod.LeveledItems.Any(
+                            l => l.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
+                        )
+                    )
                     {
-                        dropList = state.PatchMod.LeveledItems.First(e => e.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}");
+                        dropList = state.PatchMod.LeveledItems.First(
+                            e => e.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
+                        );
                     }
-                    else {
+                    else
+                    {
                         // Create leveled list for each item with a user customizable drop chance
                         dropList = state.PatchMod.LeveledItems.AddNew();
                         dropList.ChanceNone = (byte)(100 - settings.DropChance);
                         dropList.EditorID = $"{objEditorID}_{schematicType}_Lv{existingLevel}";
                         dropList.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
                         dropList.Entries.Add(bookEntry);
-                    };
+                    }
+                    ;
 
                     // Create a new entry with the new item and the same level
                     var newEntry = new LeveledItemEntry()
                     {
-                        Data = new LeveledItemEntryData() {
+                        Data = new LeveledItemEntryData()
+                        {
                             Reference = new FormLink<IItemGetter>(dropList),
                             Level = existingLevel,
                             Count = 1
@@ -252,7 +306,8 @@ namespace Hephaestus
                     var modifiedLvli = state.PatchMod.LeveledItems.GetOrAddAsOverride(leveledList);
 
                     // Add the new entry to the leveled list
-                    if (modifiedLvli.Entries == null) modifiedLvli.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                    if (modifiedLvli.Entries == null)
+                        modifiedLvli.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
                     modifiedLvli.Entries.Add(newEntry);
                 }
             }
