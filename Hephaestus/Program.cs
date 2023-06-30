@@ -26,6 +26,12 @@ namespace Hephaestus
                 .Run(args);
         }
 
+        public class ItemRelationData
+        {
+            public FormKey[] COBJs { get; set; } = new FormKey[] { };
+            public FormKey[] LVLIs { get; set; } = new FormKey[] { };
+        };
+
         // A method to run the patch on a given load order
         private static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
@@ -52,49 +58,61 @@ namespace Hephaestus
             // **Main Mechanic**
             // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
 
-            // Loop through all the COBJ records in the load order
+            int totalLoopCount = 0;
+            int pluginLoopCount = 0;
+
             foreach (
-                IConstructibleObjectGetter cobj in state.LoadOrder.PriorityOrder
-                    .ConstructibleObject()
-                    .WinningOverrides()
+                IItemGetter createdItem in state.LoadOrder.PriorityOrder.IItem().WinningOverrides()
             )
             {
-                if (!cobj.CreatedObject.TryResolve(state.LinkCache, out var createdItem))
-                    continue;
+                totalLoopCount++;
+                // Check if item even has a value and name first, and also assign two helpers for later
                 if (
-                    createdItem is not INamedGetter namedObj
-                    || createdItem is not IWeightValueGetter weightValue
+                    createdItem is not INamedGetter createdItemName
+                    || createdItem is not IWeightValueGetter createdItemValue
                 )
                     continue;
-                if (cobj.Items is null)
-                    continue;
 
-                List<FormKey> leveledLists = new List<FormKey>();
+                // Base lists to reference
+                List<FormKey> COBJFormList = new List<FormKey>();
+                List<FormKey> LVLIFormList = new List<FormKey>();
 
-                // Look up LVLI with item
+                // Check if there are any COBJs that this item is made from
                 foreach (
-                    var leveledList in state.LoadOrder.PriorityOrder
-                        .LeveledItem()
+                    var baseCOBJ in state.LoadOrder.PriorityOrder
+                        .ConstructibleObject()
                         .WinningOverrides()
                 )
                 {
-                    // Check if the leveled list contains the item and if it's already been added
-                    if (
-                        leveledList.Entries != null
-                        && leveledList.Entries.Any(
-                            e => e.Data?.Reference.FormKey == createdItem.FormKey
-                        )
-                        && !leveledLists.Any(e => e == leveledList.FormKey)
-                    )
+                    if (baseCOBJ.CreatedObject.FormKey == createdItem.FormKey)
                     {
-                        leveledLists.Add(leveledList.FormKey);
+                        COBJFormList.Add(baseCOBJ.FormKey);
                     }
-                    else
-                        continue;
                 }
 
+                // if no relevant COBJs, skip item early
+                if (COBJFormList.Count == 0)
+                    continue;
+
+                // Check if there are any LVLIs that this item is dropped in
+                foreach (
+                    var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
+                )
+                {
+                    if (baseLVLI.Entries == null)
+                        continue;
+                    if (baseLVLI.Entries.Any(e => e.Data?.Reference.FormKey == createdItem.FormKey))
+                    {
+                        LVLIFormList.Add(baseLVLI.FormKey);
+                    }
+                }
+
+                // if no relevant LVLIs, skip item early
+                if (LVLIFormList.Count == 0)
+                    continue;
+
                 // Deterministic seed
-                var random = new Random(cobj.FormKey.ID.GetHashCode());
+                var random = new Random(createdItem.FormKey.ID.GetHashCode());
 
                 // Base Scroll
                 var schematicBase = Skyrim.Scroll.EbonyFleshScroll.TryResolve(state.LinkCache);
@@ -103,10 +121,10 @@ namespace Hephaestus
                 var objBounds = schematicBase?.ObjectBounds?.DeepCopy() ?? new ObjectBounds();
 
                 // Base Object
-                string? objName = namedObj.Name;
+                string? objName = createdItemName.Name;
                 string? objType = string.Empty;
                 string? objEditorID = createdItem.EditorID;
-                uint objValue = weightValue.Value;
+                uint objValue = createdItemValue.Value;
 
                 // Book variables
                 Book book;
@@ -118,214 +136,274 @@ namespace Hephaestus
                 if (objName?.IndexOfAny(vowels) == 0)
                     aAn = "an";
 
-                // Set values based on bench
-                if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingSmithingForge.FormKey)
-                {
-                    objBench = "Forge";
-                    processName = "forging";
-
-                    _ = createdItem switch
-                    {
-                        IWeaponGetter => objType = "Weapon",
-                        IArmorGetter => objType = "Armor",
-                        _ => objType = "Misc"
-                    };
-
-                    if (createdItem is IArmorGetter armorObj)
-                    {
-                        var flagToCheck = armorObj.BodyTemplate;
-                        if (flagToCheck == null)
-                            continue;
-                        else if (
-                            flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Hands)
-                            || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Feet)
-                        )
-                        {
-                            aAn = "a pair of";
-                        }
-                        else if (
-                            flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Amulet)
-                            || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Ring)
-                        )
-                        {
-                            objType = "Jewelry";
-                        }
-
-                        if (armorObj.EquipmentType.FormKey == Skyrim.EquipType.Shield.FormKey)
-                        {
-                            objType = "Shield";
-                        }
-                    }
-                }
-                else if (
-                    cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingTanningRack.FormKey
-                )
-                {
-                    objBench = "Tanning Rack";
-                    processName = "tanning";
-                    objType = "Misc";
-                }
-                else if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingCookpot.FormKey)
-                {
-                    objBench = "cooking pot";
-                    schematicType = "Recipe";
-                    processName = "cooking";
-
-                    _ = createdItem switch
-                    {
-                        IIngredientGetter => objType = "Ingredient",
-                        _ => objType = "Food"
-                    };
-                }
-                else
-                    continue;
-
-                foreach (var reqItem in cobj.Items)
-                {
-                    if (!reqItem.Item.Item.TryResolve(state.LinkCache, out var reqItemObj))
-                        continue;
-                    if (reqItemObj is not INamedGetter namedItem)
-                        continue;
-                    requiredItems += $"{namedItem?.Name}\n";
-                }
-                ;
-
-                // Assigning flavour data
-                string bookTextTemplate =
-                    $"{objName} {schematicType}\n\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
-                string bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
-
-                // Check if a schematic with the same editor ID already exists
-                if (state.PatchMod.Books.Any(l => l.EditorID == bookEditorIDTemplate))
-                {
-                    book = state.PatchMod.Books.First(e => e.EditorID == bookEditorIDTemplate);
-                }
-                else
-                {
-                    // create a new book
-                    book = state.PatchMod.Books.AddNew(objEditorID);
-
-                    // Set the book properties
-                    book.EditorID = bookEditorIDTemplate;
-                    book.Name = $"{objType} {schematicType}: {objName}";
-                    book.Value = objValue * 5;
-                    book.Weight = 0.1f;
-                    book.Model = objModel;
-                    // book.InventoryArt = objInvArt;
-                    book.ObjectBounds = objBounds;
-                    book.BookText = bookTextTemplate;
-                    book.Type = Book.BookType.NoteOrScroll;
-
-                    if (settings.ShowDebugLogs)
-                    {
-                        Console.WriteLine(book.Name);
-                        Console.WriteLine(book.BookText);
-                        Console.WriteLine("");
-                        Console.WriteLine("=================================================");
-                        Console.WriteLine("");
-                    }
-                }
-                ;
-
-                // Create a new COBJ record with the modified height and add it to the output mod
-                var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
-                GetItemCountConditionData newCond = new GetItemCountConditionData();
-                newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(newCond, book.FormKey);
-                newCond.ItemOrList.Link.SetTo(book);
-
-                modifiedCobj.Conditions.Add(
-                    new ConditionFloat()
-                    {
-                        ComparisonValue = 1,
-                        CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                        Data = newCond
-                    }
+                Console.WriteLine(
+                    $"{createdItem.EditorID},{COBJFormList[0]} + {COBJFormList.Count} more, {LVLIFormList[0]} + {LVLIFormList.Count} more"
                 );
-
-                // Add schematic to LVLI
-                foreach (FormKey leveledListKey in leveledLists)
-                {
-                    var leveledList = state.LoadOrder.PriorityOrder
-                        .LeveledItem()
-                        .WinningOverrides()
-                        .First(e => e.FormKey == leveledListKey);
-
-                    // Define the LVLI to be made specifically for the schematic
-                    LeveledItem schematicLVLI;
-
-                    Console.WriteLine(leveledList.EditorID);
-
-                    LeveledItemEntry bookEntry = new LeveledItemEntry()
-                    {
-                        Data = new LeveledItemEntryData()
-                        {
-                            Reference = new FormLink<IItemGetter>(book.FormKey),
-                            Level = 1,
-                            Count = 1
-                        }
-                    };
-
-                    if (leveledList.Entries == null)
-                        continue;
-
-                    for (int i = 0; i < leveledList.Entries?.Count; i++)
-                    {
-                        var existingEntry = leveledList.Entries[i];
-                        if (existingEntry.Data?.Reference.FormKey != createdItem.FormKey)
-                            continue;
-
-                        // Get the level of the existing entry
-                        short existingLevel =
-                            leveledList.Entries
-                                ?.First(e => e.Data?.Reference.FormKey == createdItem.FormKey)
-                                ?.Data?.Level ?? 1;
-
-                        // Check if a leveled list with the same editor ID already exists
-                        if (
-                            state.PatchMod.LeveledItems.Any(
-                                l =>
-                                    l.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
-                            )
-                        )
-                        {
-                            schematicLVLI = state.PatchMod.LeveledItems.First(
-                                e =>
-                                    e.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
-                            );
-                        }
-                        else
-                        {
-                            // Create leveled list for each item with a user customizable drop chance
-                            schematicLVLI = state.PatchMod.LeveledItems.AddNew();
-                            schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
-                            schematicLVLI.EditorID =
-                                $"{objEditorID}_{schematicType}_Lv{existingLevel}";
-                            schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
-                            schematicLVLI.Entries.Add(bookEntry);
-                        }
-                        ;
-
-                        // Create a new entry with the new item and the same level
-                        LeveledItemEntry newEntry = new LeveledItemEntry()
-                        {
-                            Data = new LeveledItemEntryData()
-                            {
-                                Reference = new FormLink<IItemGetter>(schematicLVLI),
-                                Level = existingLevel,
-                                Count = 1
-                            }
-                        };
-
-                        LeveledItem modifiedBaseLVLI =
-                            state.PatchMod.LeveledItems.GetOrAddAsOverride(leveledList);
-
-                        // Add the new entry to the leveled list
-                        if (modifiedBaseLVLI.Entries == null)
-                            modifiedBaseLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
-                        modifiedBaseLVLI.Entries.Add(newEntry);
-                    }
-                }
+                pluginLoopCount++;
             }
+
+            Console.WriteLine($"Out of {totalLoopCount} loops, {pluginLoopCount} were valid");
+
+            // COBJ info prep
+            // foreach (
+            //     IConstructibleObjectGetter cobj in state.LoadOrder.PriorityOrder
+            //         .ConstructibleObject()
+            //         .WinningOverrides()
+            // )
+            // {
+            //     // Sanity check
+            //     if (!cobj.CreatedObject.TryResolve(state.LinkCache, out var createdItem))
+            //         continue;
+            //     if (
+            //         createdItem is not INamedGetter namedObj
+            //         || createdItem is not IWeightValueGetter weightValue
+            //     )
+            //         continue;
+            //     if (cobj.Items is null)
+            //         continue;
+
+            //     // Check if the leveled list contains the item and if it's already been added
+            //     if (
+            //         createdItemFormKeys != null
+            //         && createdItemFormKeys.Any(e => e == createdItem.FormKey)
+            //     )
+            //     {
+            //         createdItemFormKeys.Add(createdItem.FormKey);
+            //     }
+            //     ;
+
+            //     List<FormKey> leveledLists = new List<FormKey>();
+
+            //     // Look up LVLI with item
+            //     foreach (
+            //         var leveledList in state.LoadOrder.PriorityOrder
+            //             .LeveledItem()
+            //             .WinningOverrides()
+            //     )
+            //     {
+            //         // Check if the leveled list contains the item and if it's already been added
+            //         if (
+            //             leveledList.Entries != null
+            //             && leveledList.Entries.Any(
+            //                 e => e.Data?.Reference.FormKey == createdItem.FormKey
+            //             )
+            //             && !leveledLists.Any(e => e == leveledList.FormKey)
+            //         )
+            //         {
+            //             leveledLists.Add(leveledList.FormKey);
+            //         }
+            //         else
+            //             continue;
+            //     }
+
+            //     // Set values based on bench
+            //     if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingSmithingForge.FormKey)
+            //     {
+            //         objBench = "Forge";
+            //         processName = "forging";
+
+            //         _ = createdItem switch
+            //         {
+            //             IWeaponGetter => objType = "Weapon",
+            //             IArmorGetter => objType = "Armor",
+            //             _ => objType = "Misc"
+            //         };
+
+            //         if (createdItem is IArmorGetter armorObj)
+            //         {
+            //             var flagToCheck = armorObj.BodyTemplate;
+            //             if (flagToCheck == null)
+            //                 continue;
+            //             else if (
+            //                 flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Hands)
+            //                 || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Feet)
+            //             )
+            //             {
+            //                 aAn = "a pair of";
+            //             }
+            //             else if (
+            //                 flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Amulet)
+            //                 || flagToCheck.FirstPersonFlags.HasFlag(BipedObjectFlag.Ring)
+            //             )
+            //             {
+            //                 objType = "Jewelry";
+            //             }
+
+            //             if (armorObj.EquipmentType.FormKey == Skyrim.EquipType.Shield.FormKey)
+            //             {
+            //                 objType = "Shield";
+            //             }
+            //         }
+            //     }
+            //     else if (
+            //         cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingTanningRack.FormKey
+            //     )
+            //     {
+            //         objBench = "Tanning Rack";
+            //         processName = "tanning";
+            //         objType = "Misc";
+            //     }
+            //     else if (cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingCookpot.FormKey)
+            //     {
+            //         objBench = "cooking pot";
+            //         schematicType = "Recipe";
+            //         processName = "cooking";
+
+            //         _ = createdItem switch
+            //         {
+            //             IIngredientGetter => objType = "Ingredient",
+            //             _ => objType = "Food"
+            //         };
+            //     }
+            //     else
+            //         continue;
+
+            //     foreach (var reqItem in cobj.Items)
+            //     {
+            //         if (!reqItem.Item.Item.TryResolve(state.LinkCache, out var reqItemObj))
+            //             continue;
+            //         if (reqItemObj is not INamedGetter namedItem)
+            //             continue;
+            //         requiredItems += $"{namedItem?.Name}\n";
+            //     }
+            //     ;
+
+            //     // Assigning flavour data
+            //     string bookTextTemplate =
+            //         $"[pagebreak]\n<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]\n<p align='left'>\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
+            //     string bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
+
+            //     // Check if a schematic with the same editor ID already exists
+            //     if (state.PatchMod.Books.Any(l => l.EditorID == bookEditorIDTemplate))
+            //     {
+            //         book = state.PatchMod.Books.First(e => e.EditorID == bookEditorIDTemplate);
+            //     }
+            //     else
+            //     {
+            //         // create a new book
+            //         book = state.PatchMod.Books.AddNew(objEditorID);
+
+            //         // Set the book properties
+            //         book.EditorID = bookEditorIDTemplate;
+            //         book.Name = $"{objType} {schematicType}: {objName}";
+            //         book.Value = objValue * 5;
+            //         book.Weight = 0.1f;
+            //         book.Model = objModel;
+            //         // book.InventoryArt = objInvArt;
+            //         book.ObjectBounds = objBounds;
+            //         book.BookText = bookTextTemplate;
+            //         book.Type = Book.BookType.NoteOrScroll;
+
+            //         if (settings.ShowDebugLogs)
+            //         {
+            //             Console.WriteLine(book.Name);
+            //             Console.WriteLine(book.BookText);
+            //             Console.WriteLine("");
+            //             Console.WriteLine("=================================================");
+            //             Console.WriteLine("");
+            //         }
+            //     }
+            //     ;
+
+            //     // Create a new COBJ record with the modified height and add it to the output mod
+            //     var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
+            //     GetItemCountConditionData newCond = new GetItemCountConditionData();
+            //     newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(newCond, book.FormKey);
+            //     newCond.ItemOrList.Link.SetTo(book);
+
+            //     modifiedCobj.Conditions.Add(
+            //         new ConditionFloat()
+            //         {
+            //             ComparisonValue = 1,
+            //             CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+            //             Data = newCond
+            //         }
+            //     );
+
+            //     // Add schematic to LVLI
+            //     foreach (FormKey leveledListKey in leveledLists)
+            //     {
+            //         var leveledList = state.LoadOrder.PriorityOrder
+            //             .LeveledItem()
+            //             .WinningOverrides()
+            //             .First(e => e.FormKey == leveledListKey);
+
+            //         // Define the LVLI to be made specifically for the schematic
+            //         LeveledItem schematicLVLI;
+
+            //         Console.WriteLine(leveledList.EditorID);
+
+            //         LeveledItemEntry bookEntry = new LeveledItemEntry()
+            //         {
+            //             Data = new LeveledItemEntryData()
+            //             {
+            //                 Reference = new FormLink<IItemGetter>(book.FormKey),
+            //                 Level = 1,
+            //                 Count = 1
+            //             }
+            //         };
+
+            //         if (leveledList.Entries == null)
+            //             continue;
+
+            //         for (int i = 0; i < leveledList.Entries?.Count; i++)
+            //         {
+            //             var existingEntry = leveledList.Entries[i];
+            //             if (existingEntry.Data?.Reference.FormKey != createdItem.FormKey)
+            //                 continue;
+
+            //             // Get the level of the existing entry
+            //             short existingLevel =
+            //                 leveledList.Entries
+            //                     ?.First(e => e.Data?.Reference.FormKey == createdItem.FormKey)
+            //                     ?.Data?.Level ?? 1;
+
+            //             // Check if a leveled list with the same editor ID already exists
+            //             if (
+            //                 state.PatchMod.LeveledItems.Any(
+            //                     l =>
+            //                         l.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
+            //                 )
+            //             )
+            //             {
+            //                 schematicLVLI = state.PatchMod.LeveledItems.First(
+            //                     e =>
+            //                         e.EditorID == $"{objEditorID}_{schematicType}_Lv{existingLevel}"
+            //                 );
+            //             }
+            //             else
+            //             {
+            //                 // Create leveled list for each item with a user customizable drop chance
+            //                 schematicLVLI = state.PatchMod.LeveledItems.AddNew();
+            //                 schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
+            //                 schematicLVLI.EditorID =
+            //                     $"{objEditorID}_{schematicType}_Lv{existingLevel}";
+            //                 schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+            //                 schematicLVLI.Entries.Add(bookEntry);
+            //             }
+            //             ;
+
+            //             // Create a new entry with the new item and the same level
+            //             LeveledItemEntry newEntry = new LeveledItemEntry()
+            //             {
+            //                 Data = new LeveledItemEntryData()
+            //                 {
+            //                     Reference = new FormLink<IItemGetter>(schematicLVLI),
+            //                     Level = existingLevel,
+            //                     Count = 1
+            //                 }
+            //             };
+
+            //             LeveledItem modifiedBaseLVLI =
+            //                 state.PatchMod.LeveledItems.GetOrAddAsOverride(leveledList);
+
+            //             // Add the new entry to the leveled list
+            //             if (modifiedBaseLVLI.Entries == null)
+            //                 modifiedBaseLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+            //             modifiedBaseLVLI.Entries.Add(newEntry);
+            //         }
+            //     }
+            // }
 
             Console.WriteLine("");
             Console.WriteLine("=================================================");
