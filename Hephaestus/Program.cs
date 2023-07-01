@@ -31,11 +31,11 @@ namespace Hephaestus
         {
             char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' };
 
-            Console.WriteLine("");
+            Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
-            Console.WriteLine("Preparing things ...");
+            Console.WriteLine("Building cache ...");
             Console.WriteLine("=================================================");
-            Console.WriteLine("");
+            Console.WriteLine(String.Empty);
 
             // **Main Mechanic**
             // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
@@ -44,6 +44,13 @@ namespace Hephaestus
             Dictionary<FormKey, List<FormKey>> itemLVLIs = new();
             Dictionary<FormKey, FormKey> itemBOOK = new();
             Dictionary<FormKey, Dictionary<String, FormKey>> bookLVLIs = new();
+            List<FormKey> benchWhitelist =
+                new()
+                {
+                    Skyrim.Keyword.CraftingSmithingForge.FormKey,
+                    Skyrim.Keyword.CraftingCookpot.FormKey,
+                    Skyrim.Keyword.CraftingTanningRack.FormKey
+                };
 
             foreach (
                 IConstructibleObjectGetter baseCOBJ in state.LoadOrder.PriorityOrder
@@ -52,7 +59,10 @@ namespace Hephaestus
             )
             {
                 // Sanity checks to lower processing count
-                if (baseCOBJ.Items == null || baseCOBJ.CreatedObjectCount == 0)
+                if (
+                    baseCOBJ.Items == null
+                    || !benchWhitelist.Contains(baseCOBJ.WorkbenchKeyword.FormKey)
+                )
                     continue;
                 if (
                     !baseCOBJ.CreatedObject.TryResolve(state.LinkCache, out var createdItem)
@@ -75,7 +85,9 @@ namespace Hephaestus
                     {
                         if (!itemLVLIs.ContainsKey(createdItem.FormKey))
                             itemLVLIs.Add(createdItem.FormKey, new List<FormKey>());
-                        itemLVLIs[createdItem.FormKey].Add(baseLVLI.FormKey);
+
+                        if (!itemLVLIs[createdItem.FormKey].Contains(baseLVLI.FormKey))
+                            itemLVLIs[createdItem.FormKey].Add(baseLVLI.FormKey);
                     }
                 }
 
@@ -87,25 +99,13 @@ namespace Hephaestus
                 if (!itemCOBJs.ContainsKey(createdItem.FormKey))
                     itemCOBJs.Add(createdItem.FormKey, new List<FormKey>());
                 itemCOBJs[createdItem.FormKey].Add(baseCOBJ.FormKey);
-
-                Console.WriteLine("");
-                Console.WriteLine($"Found {createdItemName.Name} ...");
-                if (settings.ShowDebugLogs)
-                {
-                    Console.WriteLine("It's referenced in the following COBJs:");
-                    Console.WriteLine($"{String.Join('\n', itemCOBJs[createdItem.FormKey])}");
-                    Console.WriteLine("And the following LVLIs:");
-                    Console.WriteLine($"{String.Join('\n', itemLVLIs[createdItem.FormKey])}");
-                }
-                Console.WriteLine("");
-                Console.WriteLine("=================================================");
             }
 
-            Console.WriteLine("");
+            Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
-            Console.WriteLine("Assigning item types and prepping more variables ...");
+            Console.WriteLine("Assigning item types and prepping things ...");
             Console.WriteLine("=================================================");
-            Console.WriteLine("");
+            Console.WriteLine(String.Empty);
 
             foreach (var createdItemFormKey in itemCOBJs.Keys)
             {
@@ -120,6 +120,19 @@ namespace Hephaestus
                     || createdItem is not IWeightValueGetter createdItemValue
                 )
                     continue;
+
+                if (settings.ShowDebugLogs)
+                {
+                    Console.WriteLine("=================================================");
+                    Console.WriteLine(String.Empty);
+                    Console.WriteLine($"Found {createdItemName.Name} ...");
+                    Console.WriteLine("It's referenced in the following COBJs:");
+                    Console.WriteLine($"{String.Join('\n', itemCOBJs[createdItem.FormKey])}");
+                    Console.WriteLine("And the following LVLIs:");
+                    Console.WriteLine($"{String.Join('\n', itemLVLIs[createdItem.FormKey])}");
+                }
+                else
+                    Console.WriteLine($"Patching for {createdItemName.Name} ...");
 
                 // Deterministic seed
                 var random = new Random(createdItem.FormKey.ID.GetHashCode());
@@ -137,8 +150,8 @@ namespace Hephaestus
                 Model objModel = schematicBase?.Model?.DeepCopy() ?? new Model();
                 ObjectBounds objBounds =
                     schematicBase?.ObjectBounds?.DeepCopy() ?? new ObjectBounds();
-                string? objBench;
-                string? processName;
+                string? objBench = "Forge";
+                string? processName = "crafting";
                 string schematicType = "Schematic";
                 string? requiredItems = String.Empty;
                 string? aAn;
@@ -177,25 +190,23 @@ namespace Hephaestus
                         }
                         break;
                 }
-
-                Console.WriteLine("");
-                Console.WriteLine("=================================================");
-                Console.WriteLine("");
-                Console.WriteLine($"Patching COBJs and creating schematics for {objName} ...");
-                Console.WriteLine("");
+                if (settings.ShowDebugLogs)
+                {
+                    Console.WriteLine(String.Empty);
+                    Console.WriteLine($"Creating {objName} schematics and patching COBJs ...");
+                    Console.WriteLine(String.Empty);
+                }
 
                 foreach (FormKey cobjFormKey in itemCOBJs[createdItemFormKey])
                 {
-                    Console.WriteLine(cobjFormKey);
                     // Define COBJ
                     if (
-                        !new FormLink<ConstructibleObject>(cobjFormKey).TryResolve(
+                        !new FormLink<IConstructibleObjectGetter>(cobjFormKey).TryResolve(
                             state.LinkCache,
                             out var cobj
                         )
                     )
                         continue;
-                    Console.WriteLine("passed");
 
                     // Set values based on bench
                     if (
@@ -217,12 +228,11 @@ namespace Hephaestus
                         cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingCookpot.FormKey
                     )
                     {
-                        objBench = "cooking pot";
+                        objBench = "Cooking Pot";
                         processName = "cooking";
                         schematicType = "Recipe";
                     }
-                    else
-                        continue;
+                    ;
 
                     if (cobj.Items == null)
                         continue;
@@ -232,7 +242,7 @@ namespace Hephaestus
                             continue;
                         if (reqItemObj is not INamedGetter namedItem)
                             continue;
-                        requiredItems += $"{namedItem?.Name}\n";
+                        requiredItems += $"{namedItem.Name}\n";
                     }
                     ;
 
@@ -274,27 +284,29 @@ namespace Hephaestus
 
                         if (settings.ShowDebugLogs)
                         {
-                            Console.WriteLine(book.Name);
+                            Console.WriteLine($"    Created {book.Name}");
+                            Console.WriteLine("-----------------------");
                             Console.WriteLine(book.BookText);
-                            Console.WriteLine("");
-                            Console.WriteLine("=================================================");
-                            Console.WriteLine("");
+                            Console.WriteLine("-----------------------");
+                            Console.WriteLine(String.Empty);
                         }
                     }
                     else
                     {
                         // Link to existing book
                         if (
-                            !new FormLink<Book>(itemBOOK[createdItem.FormKey]).TryResolve(
+                            !new FormLink<IBookGetter>(itemBOOK[createdItemFormKey]).TryResolve(
                                 state.LinkCache,
                                 out var bookLink
                             )
                         )
                             continue;
-                        book = bookLink;
-                    }
 
-                    Console.WriteLine(book.EditorID);
+                        if (bookLink is not Book BookLinkBook)
+                            continue;
+
+                        book = BookLinkBook;
+                    }
 
                     // Create a new COBJ record with the modified height and add it to the output mod
                     var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
@@ -314,18 +326,18 @@ namespace Hephaestus
                         }
                     );
 
-                    Console.WriteLine(".");
+                    if (settings.ShowDebugLogs)
+                        Console.WriteLine($"    Patched {cobj.EditorID} with {book.EditorID}");
                 }
 
-                Console.WriteLine("");
-                Console.WriteLine($"Patching LVLIs to include new schematics ...");
-                Console.WriteLine("");
+                if (settings.ShowDebugLogs)
+                    Console.WriteLine($"Patching LVLIs to include new schematics ...");
 
                 foreach (FormKey lvliFormKey in itemLVLIs[createdItemFormKey])
                 {
                     // Define LVLI and check if it's empty
                     if (
-                        !new FormLink<LeveledItem>(lvliFormKey).TryResolve(
+                        !new FormLink<ILeveledItemGetter>(lvliFormKey).TryResolve(
                             state.LinkCache,
                             out var leveledList
                         )
@@ -340,11 +352,17 @@ namespace Hephaestus
                     {
                         Data = new LeveledItemEntryData()
                         {
-                            Reference = new FormLink<Book>(itemBOOK[createdItemFormKey]),
+                            Reference = new FormLink<IItemGetter>(itemBOOK[createdItemFormKey]),
                             Level = 1,
                             Count = 1
                         }
                     };
+
+                    if (settings.ShowDebugLogs)
+                    {
+                        Console.WriteLine(String.Empty);
+                        Console.WriteLine($"    Patching {leveledList.EditorID}");
+                    }
 
                     for (int i = 0; i < leveledList.Entries?.Count; i++)
                     {
@@ -373,8 +391,7 @@ namespace Hephaestus
                             // Create leveled list for each item with a user customizable drop chance
                             schematicLVLI = state.PatchMod.LeveledItems.AddNew();
                             schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
-                            schematicLVLI.EditorID =
-                                $"{objEditorID}_{schematicType}_Lv{existingLevel}";
+                            schematicLVLI.EditorID = leveledItemIDTemplate;
                             schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
                             schematicLVLI.Entries.Add(bookEntry);
                             bookLVLIs[itemBOOK[createdItemFormKey]].Add(
@@ -384,13 +401,18 @@ namespace Hephaestus
                         }
                         else
                         {
+                            // Link to existing book
                             if (
-                                !new FormLink<LeveledItem>(
+                                !new FormLink<ILeveledItemGetter>(
                                     bookLVLIs[itemBOOK[createdItemFormKey]][leveledItemIDTemplate]
                                 ).TryResolve(state.LinkCache, out var schematicLVLILink)
                             )
                                 continue;
-                            schematicLVLI = schematicLVLILink;
+
+                            if (schematicLVLILink is not LeveledItem schematicLVLILinkLVLI)
+                                continue;
+
+                            schematicLVLI = schematicLVLILinkLVLI;
                         }
 
                         // Create a new entry with the new item and the same level
@@ -411,13 +433,16 @@ namespace Hephaestus
                         if (modifiedBaseLVLI.Entries == null)
                             modifiedBaseLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
                         modifiedBaseLVLI.Entries.Add(newEntry);
-                    }
 
-                    Console.WriteLine(".");
+                        if (settings.ShowDebugLogs)
+                            Console.WriteLine(
+                                $"        Created and inserted {schematicLVLI.EditorID}"
+                            );
+                    }
                 }
             }
 
-            Console.WriteLine("");
+            Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
         }
     }
