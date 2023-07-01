@@ -348,6 +348,7 @@ namespace Hephaestus
                     // Define the LVLI to be made specifically for the schematic
                     LeveledItem schematicLVLI;
 
+                    // basic book entry to be added to schematicLVLI
                     LeveledItemEntry bookEntry = new LeveledItemEntry()
                     {
                         Data = new LeveledItemEntryData()
@@ -358,10 +359,49 @@ namespace Hephaestus
                         }
                     };
 
+                    string leveledItemIDTemplate = $"{objEditorID}_{schematicType}";
+
+                    if (!bookLVLIs.ContainsKey(itemBOOK[createdItemFormKey]))
+                        bookLVLIs.Add(
+                            itemBOOK[createdItemFormKey],
+                            new Dictionary<String, FormKey>()
+                        );
+
+                    if (!bookLVLIs[itemBOOK[createdItemFormKey]].ContainsKey(leveledItemIDTemplate))
+                    {
+                        // Create leveled list for each item with a user customizable drop chance
+                        schematicLVLI = state.PatchMod.LeveledItems.AddNew();
+                        schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
+                        schematicLVLI.EditorID = leveledItemIDTemplate;
+                        schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                        schematicLVLI.Entries.Add(bookEntry);
+                        bookLVLIs[itemBOOK[createdItemFormKey]].Add(
+                            schematicLVLI.EditorID,
+                            schematicLVLI.FormKey
+                        );
+                    }
+                    else
+                    {
+                        // Link to existing book
+                        if (
+                            !new FormLink<ILeveledItemGetter>(
+                                bookLVLIs[itemBOOK[createdItemFormKey]][leveledItemIDTemplate]
+                            ).TryResolve(state.LinkCache, out var schematicLVLILink)
+                        )
+                            continue;
+
+                        if (schematicLVLILink is not LeveledItem schematicLVLILinkLVLI)
+                            continue;
+
+                        schematicLVLI = schematicLVLILinkLVLI;
+                    }
+
                     if (settings.ShowDebugLogs)
                     {
                         Console.WriteLine(String.Empty);
-                        Console.WriteLine($"    Patching {leveledList.EditorID}");
+                        Console.WriteLine(
+                            $"    Injecting {schematicLVLI.EditorID} in {leveledList.EditorID}"
+                        );
                     }
 
                     for (int i = 0; i < leveledList.Entries?.Count; i++)
@@ -372,48 +412,6 @@ namespace Hephaestus
 
                         // Get the level of the existing entry
                         short existingLevel = existingEntry?.Data?.Level ?? 1;
-
-                        string leveledItemIDTemplate =
-                            $"{objEditorID}_{schematicType}_Lv{existingLevel}";
-
-                        if (!bookLVLIs.ContainsKey(itemBOOK[createdItemFormKey]))
-                            bookLVLIs.Add(
-                                itemBOOK[createdItemFormKey],
-                                new Dictionary<String, FormKey>()
-                            );
-
-                        if (
-                            !bookLVLIs[itemBOOK[createdItemFormKey]].ContainsKey(
-                                leveledItemIDTemplate
-                            )
-                        )
-                        {
-                            // Create leveled list for each item with a user customizable drop chance
-                            schematicLVLI = state.PatchMod.LeveledItems.AddNew();
-                            schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
-                            schematicLVLI.EditorID = leveledItemIDTemplate;
-                            schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
-                            schematicLVLI.Entries.Add(bookEntry);
-                            bookLVLIs[itemBOOK[createdItemFormKey]].Add(
-                                schematicLVLI.EditorID,
-                                schematicLVLI.FormKey
-                            );
-                        }
-                        else
-                        {
-                            // Link to existing book
-                            if (
-                                !new FormLink<ILeveledItemGetter>(
-                                    bookLVLIs[itemBOOK[createdItemFormKey]][leveledItemIDTemplate]
-                                ).TryResolve(state.LinkCache, out var schematicLVLILink)
-                            )
-                                continue;
-
-                            if (schematicLVLILink is not LeveledItem schematicLVLILinkLVLI)
-                                continue;
-
-                            schematicLVLI = schematicLVLILinkLVLI;
-                        }
 
                         // Create a new entry with the new item and the same level
                         LeveledItemEntry newEntry = new LeveledItemEntry()
@@ -435,9 +433,7 @@ namespace Hephaestus
                         modifiedBaseLVLI.Entries.Add(newEntry);
 
                         if (settings.ShowDebugLogs)
-                            Console.WriteLine(
-                                $"        Created and inserted {schematicLVLI.EditorID}"
-                            );
+                            Console.WriteLine($"        Injected at level {existingLevel};");
                     }
                 }
             }
