@@ -37,7 +37,7 @@ namespace Hephaestus
             Console.WriteLine("=================================================");
             Console.WriteLine(String.Empty);
 
-            // **Main Mechanic**
+            // **To Do**
             // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
 
             Dictionary<FormKey, List<FormKey>> itemCOBJs = new();
@@ -109,27 +109,27 @@ namespace Hephaestus
 
             foreach (var createdItemFormKey in itemCOBJs.Keys)
             {
-                new FormLink<IItemGetter>(createdItemFormKey).TryResolve(
-                    state.LinkCache,
-                    out var createdItem
-                );
-
-                // Sanity checks to lower processing count
+                // Pull created item
                 if (
-                    createdItem is not INamedGetter createdItemName
+                    !state.LinkCache.TryResolve<IItemGetter>(
+                        createdItemFormKey,
+                        out var createdItem
+                    )
+                    || createdItem is not INamedGetter createdItemName
                     || createdItem is not IWeightValueGetter createdItemValue
                 )
                     continue;
 
                 if (settings.ShowDebugLogs)
                 {
+                    Console.WriteLine(String.Empty);
                     Console.WriteLine("=================================================");
                     Console.WriteLine(String.Empty);
                     Console.WriteLine($"Found {createdItemName.Name} ...");
-                    Console.WriteLine("It's referenced in the following COBJs:");
-                    Console.WriteLine($"{String.Join('\n', itemCOBJs[createdItem.FormKey])}");
-                    Console.WriteLine("And the following LVLIs:");
-                    Console.WriteLine($"{String.Join('\n', itemLVLIs[createdItem.FormKey])}");
+                    // Console.WriteLine("It's referenced in the following COBJs:");
+                    // Console.WriteLine($"{String.Join('\n', itemCOBJs[createdItem.FormKey])}");
+                    // Console.WriteLine("And the following LVLIs:");
+                    // Console.WriteLine($"{String.Join('\n', itemLVLIs[createdItem.FormKey])}");
                 }
                 else
                     Console.WriteLine($"Patching for {createdItemName.Name} ...");
@@ -145,8 +145,11 @@ namespace Hephaestus
 
                 // Book variables
                 Book book;
+                Book bookFragment;
                 var schematicBase = Skyrim.Scroll.EbonyFleshScroll.TryResolve(state.LinkCache);
-                var objInvArt = schematicBase?.MenuDisplayObject.TryResolve(state.LinkCache);
+                var objInvArt = new FormLinkNullable<IStaticGetter>(
+                    schematicBase?.MenuDisplayObject.FormKey
+                );
                 Model objModel = schematicBase?.Model?.DeepCopy() ?? new Model();
                 ObjectBounds objBounds =
                     schematicBase?.ObjectBounds?.DeepCopy() ?? new ObjectBounds();
@@ -201,8 +204,8 @@ namespace Hephaestus
                 {
                     // Define COBJ
                     if (
-                        !new FormLink<IConstructibleObjectGetter>(cobjFormKey).TryResolve(
-                            state.LinkCache,
+                        !state.LinkCache.TryResolve<IConstructibleObjectGetter>(
+                            cobjFormKey,
                             out var cobj
                         )
                     )
@@ -215,7 +218,7 @@ namespace Hephaestus
                     )
                     {
                         objBench = "Forge";
-                        processName = "forging";
+                        processName = "smelting";
                     }
                     else if (
                         cobj.WorkbenchKeyword.FormKey == Skyrim.Keyword.CraftingTanningRack.FormKey
@@ -258,35 +261,186 @@ namespace Hephaestus
                         $"still has some stains of blood on it, it describes the process of"
                     };
 
-                    // Assigning flavour data
-                    string bookTextTemplate =
-                        $"[pagebreak]\n<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]\n<p align='left'>\nMaterials needed:\n{requiredItems}\n<img src='img://Textures/Interface/Books/Illuminated_Letters/T_letter.png'>his {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}. I better not lose this.";
-                    string bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
-
                     if (!itemBOOK.ContainsKey(createdItem.FormKey))
                     {
+                        // Define how many times an item needs to be broken down
+                        int min = 5;
+                        int max = 10;
+                        uint noteToSchematicRatio = (uint)
+                            Math.Max(Math.Round(min + (max - min) * (float)random.NextDouble()), 1);
+
                         // create a new book
                         book = state.PatchMod.Books.AddNew(objEditorID);
 
                         // Set the book properties
                         book.EditorID = $"{objEditorID}_{schematicType}";
                         book.Name = $"{objType} {schematicType}: {objName}";
-                        book.Value = objValue * 5;
-                        book.Weight = 0.1f;
+                        book.Description =
+                            $"A {schematicType.ToLower()} that provides guidance on {processName} {aAn} {objName}. Without this, I won't be able to remember how to craft the item anymore.";
+                        book.Value = objValue * noteToSchematicRatio;
+                        book.Weight = 0.25f;
                         book.Model = objModel;
-                        // book.InventoryArt = objInvArt;
+                        book.InventoryArt = objInvArt;
                         book.ObjectBounds = objBounds;
-                        book.BookText = bookTextTemplate;
+                        book.BookText =
+                            $"[pagebreak]\n<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]\n<p align='left'>\nMaterials needed:\n{requiredItems}\nThis {schematicType.ToLower()} {flavourText[random.Next(flavourText.Length)]} {processName} {aAn} {objName} at a {objBench}.";
+                        ;
                         book.Type = Book.BookType.NoteOrScroll;
+                        book.Keywords = new Noggog.ExtendedList<IFormLinkGetter<IKeywordGetter>>();
+                        book.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
 
                         // Add book to dict
                         itemBOOK.Add(createdItem.FormKey, book.FormKey);
 
                         if (settings.ShowDebugLogs)
                         {
-                            Console.WriteLine($"    Created {book.Name}");
+                            Console.WriteLine($"Created {book.Name}:");
                             Console.WriteLine("-----------------------");
                             Console.WriteLine(book.BookText);
+                            Console.WriteLine("-----------------------");
+                            Console.WriteLine(String.Empty);
+                        }
+
+                        // create a new book fragment
+                        bookFragment = state.PatchMod.Books.AddNew(book.EditorID);
+                        string? counter = "a couple";
+                        switch (noteToSchematicRatio)
+                        {
+                            case (<= 6):
+                                counter = "a small amount";
+                                break;
+                            case (<= 8):
+                                counter = "a fair amount";
+                                break;
+                            case (<= 10):
+                                counter = "a larger amount";
+                                break;
+                        }
+
+                        // Set the fragment properties
+                        bookFragment.EditorID = $"{objEditorID}_{schematicType}_Fragment";
+                        bookFragment.Name = $"{schematicType} notes on {objName}";
+                        bookFragment.Description =
+                            $"Notes I made on the {processName} of {aAn} {objName}. Maybe if I collect {counter} of these I can then write up my own {schematicType.ToLower()}.";
+                        bookFragment.Value = (uint)(
+                            Math.Min(Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)), 1)
+                        );
+                        bookFragment.Weight = 0.1f;
+                        bookFragment.Model = objModel;
+                        book.InventoryArt = objInvArt;
+                        bookFragment.ObjectBounds = objBounds;
+                        bookFragment.BookText =
+                            $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding the process of {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
+                        string bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
+                        ;
+                        bookFragment.Type = Book.BookType.NoteOrScroll;
+                        bookFragment.Keywords = new Noggog.ExtendedList<
+                            IFormLinkGetter<IKeywordGetter>
+                        >();
+                        bookFragment.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
+
+                        // Create COBJ item -> fragment
+                        var itemToFragmentCOBJ = state.PatchMod.ConstructibleObjects.AddNew();
+
+                        itemToFragmentCOBJ.EditorID = $"{objEditorID}_Breakdown_Recipe";
+                        itemToFragmentCOBJ.CreatedObject =
+                            new FormLinkNullable<IConstructibleGetter>(bookFragment.FormKey);
+
+                        itemToFragmentCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>();
+                        itemToFragmentCOBJ.Items.Add(
+                            new ContainerEntry()
+                            {
+                                Item = new ContainerItem()
+                                {
+                                    Item = new FormLink<IItemGetter>(createdItem.FormKey),
+                                    Count = 1
+                                },
+                            }
+                        );
+
+                        // Set which place the items disassemble
+                        if (
+                            cobj.WorkbenchKeyword.FormKey
+                            == Skyrim.Keyword.CraftingSmithingForge.FormKey
+                        )
+                        {
+                            itemToFragmentCOBJ.WorkbenchKeyword =
+                                new FormLinkNullable<IKeywordGetter>(
+                                    Skyrim.Keyword.CraftingSmelter.FormKey
+                                );
+                        }
+                        else
+                        {
+                            itemToFragmentCOBJ.WorkbenchKeyword =
+                                new FormLinkNullable<IKeywordGetter>(cobj.WorkbenchKeyword.FormKey);
+                        }
+                        itemToFragmentCOBJ.CreatedObjectCount = (ushort?)
+                            itemToFragmentCOBJ.Items.Count;
+
+                        // Add conditions (so it doesn't clutter the menu)
+                        GetItemCountConditionData itemToFragmentCOBJCond =
+                            new GetItemCountConditionData();
+                        itemToFragmentCOBJCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            itemToFragmentCOBJCond,
+                            createdItem.FormKey
+                        );
+                        itemToFragmentCOBJCond.ItemOrList.Link.SetTo(book);
+
+                        itemToFragmentCOBJ.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = 1,
+                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                                Data = itemToFragmentCOBJCond
+                            }
+                        );
+
+                        // Create COBJ fragment -> book
+                        var bookCOBJ = state.PatchMod.ConstructibleObjects.AddNew();
+
+                        bookCOBJ.EditorID = $"{objEditorID}_{schematicType}_Recipe";
+                        bookCOBJ.CreatedObject = new FormLinkNullable<IConstructibleGetter>(
+                            book.FormKey
+                        );
+
+                        bookCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>();
+                        bookCOBJ.Items.Add(
+                            new ContainerEntry()
+                            {
+                                Item = new ContainerItem()
+                                {
+                                    Item = new FormLink<IItemGetter>(bookFragment.FormKey),
+                                    Count = (int)noteToSchematicRatio
+                                },
+                            }
+                        );
+                        bookCOBJ.WorkbenchKeyword = new FormLinkNullable<IKeywordGetter>(
+                            cobj.WorkbenchKeyword.FormKey
+                        );
+                        bookCOBJ.CreatedObjectCount = (ushort?)bookCOBJ.Items.Count;
+
+                        // Add conditions (so it doesn't clutter the menu)
+                        GetItemCountConditionData bookCOBJCond = new GetItemCountConditionData();
+                        bookCOBJCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            bookCOBJCond,
+                            bookCOBJ.FormKey
+                        );
+                        bookCOBJCond.ItemOrList.Link.SetTo(book);
+
+                        bookCOBJ.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = noteToSchematicRatio,
+                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                                Data = bookCOBJCond
+                            }
+                        );
+
+                        if (settings.ShowDebugLogs)
+                        {
+                            Console.WriteLine($"Created {bookFragment.Name}:");
+                            Console.WriteLine("-----------------------");
+                            Console.WriteLine(bookFragment.BookText);
                             Console.WriteLine("-----------------------");
                             Console.WriteLine(String.Empty);
                         }
@@ -295,8 +449,8 @@ namespace Hephaestus
                     {
                         // Link to existing book
                         if (
-                            !new FormLink<IBookGetter>(itemBOOK[createdItemFormKey]).TryResolve(
-                                state.LinkCache,
+                            !state.LinkCache.TryResolve<IBookGetter>(
+                                itemBOOK[createdItemFormKey],
                                 out var bookLink
                             )
                         )
@@ -308,7 +462,7 @@ namespace Hephaestus
                         book = BookLinkBook;
                     }
 
-                    // Create a new COBJ record with the modified height and add it to the output mod
+                    // Create a new COBJ record with the modified conditions
                     var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
                     GetItemCountConditionData newCond = new GetItemCountConditionData();
                     newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
@@ -337,8 +491,8 @@ namespace Hephaestus
                 {
                     // Define LVLI and check if it's empty
                     if (
-                        !new FormLink<ILeveledItemGetter>(lvliFormKey).TryResolve(
-                            state.LinkCache,
+                        !state.LinkCache.TryResolve<ILeveledItemGetter>(
+                            lvliFormKey,
                             out var leveledList
                         )
                         && leveledList?.Entries == null
@@ -384,9 +538,10 @@ namespace Hephaestus
                     {
                         // Link to existing book
                         if (
-                            !new FormLink<ILeveledItemGetter>(
-                                bookLVLIs[itemBOOK[createdItemFormKey]][leveledItemIDTemplate]
-                            ).TryResolve(state.LinkCache, out var schematicLVLILink)
+                            !state.LinkCache.TryResolve<ILeveledItemGetter>(
+                                bookLVLIs[itemBOOK[createdItemFormKey]][leveledItemIDTemplate],
+                                out var schematicLVLILink
+                            )
                         )
                             continue;
 
