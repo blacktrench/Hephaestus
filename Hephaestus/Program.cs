@@ -1,7 +1,3 @@
-// Hephaestus.cs
-// A mutagen synthesis patcher that randomizes the height of all human COBJs in a deterministic manner
-// The patcher can be configured with a minimum and maximum value for each race and gender of that race
-
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Plugins;
@@ -11,6 +7,11 @@ using Mutagen.Bethesda.Synthesis;
 
 namespace Hephaestus
 {
+    // **To Do**
+    // Patch the blacksmithing intro quest to give you the relevant schematics with the materials.
+    // Add item blacklist?
+    // Move bench types to customization
+
     public class Program
     {
         static Lazy<Settings> _settings = null!;
@@ -26,20 +27,10 @@ namespace Hephaestus
                 .Run(args);
         }
 
-        // A method to run the patch on a given load order
         private static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+            //Declare base vars and dictionaries
             char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U' };
-
-            Console.WriteLine(String.Empty);
-            Console.WriteLine("=================================================");
-            Console.WriteLine("Building cache ...");
-            Console.WriteLine("=================================================");
-            Console.WriteLine(String.Empty);
-
-            // **To Do**
-            // 7. We patch the blacksmithing intro quest to give you the relevant schematics with the materials.
-
             Dictionary<FormKey, List<FormKey>> itemCOBJs = new();
             Dictionary<FormKey, List<FormKey>> itemLVLIs = new();
             Dictionary<FormKey, FormKey> itemBOOK = new();
@@ -52,29 +43,31 @@ namespace Hephaestus
                     Skyrim.Keyword.CraftingTanningRack.FormKey
                 };
 
+            Console.WriteLine(String.Empty);
+            Console.WriteLine("=================================================");
+            Console.WriteLine("Building cache ...");
+            Console.WriteLine("=================================================");
+            Console.WriteLine(String.Empty);
+
+            // Enumerate through COBJs and save the data for later for the items that have names and values, for which the COBJ has a whitelisted keyword and which are present in at least one leveled list
             foreach (
                 IConstructibleObjectGetter baseCOBJ in state.LoadOrder.PriorityOrder
                     .ConstructibleObject()
                     .WinningOverrides()
             )
             {
-                // Sanity checks to lower processing count
+                // Sanity checks to skip unnecessary processing
                 if (
                     baseCOBJ.Items == null
                     || !benchWhitelist.Contains(baseCOBJ.WorkbenchKeyword.FormKey)
-                )
-                    continue;
-                if (
-                    !baseCOBJ.CreatedObject.TryResolve(state.LinkCache, out var createdItem)
-                    || createdItem is not INamedGetter createdItemName
-                    || createdItem is not IWeightValueGetter createdItemValue
+                    || !baseCOBJ.CreatedObject.TryResolve(state.LinkCache, out var createdItem)
                 )
                     continue;
 
-                // Base lists to reference
-                List<FormKey> LVLIFormList = new List<FormKey>();
+                if (createdItem is not IWeightValueGetter && createdItem is not IWeaponGetter)
+                    continue;
 
-                // Check if there are any LVLIs that this item is dropped in
+                // Check if there are any LVLIs that this item is present in
                 foreach (
                     var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
                 )
@@ -114,9 +107,7 @@ namespace Hephaestus
                     !state.LinkCache.TryResolve<IItemGetter>(
                         createdItemFormKey,
                         out var createdItem
-                    )
-                    || createdItem is not INamedGetter createdItemName
-                    || createdItem is not IWeightValueGetter createdItemValue
+                    ) || createdItem is not INamedGetter createdItemName
                 )
                     continue;
 
@@ -140,8 +131,15 @@ namespace Hephaestus
                 // Base Object
                 string? objName = createdItemName.Name;
                 string? objEditorID = createdItem.EditorID;
-                uint objValue = createdItemValue.Value;
+                uint objValue;
                 string? objType = "Misc";
+
+                if (createdItem is IWeightValueGetter createdItemValue)
+                    objValue = createdItemValue.Value;
+                else if (createdItem is IWeaponGetter createdWeapon)
+                    objValue = createdWeapon.BasicStats?.Value ?? 10;
+                else
+                    continue;
 
                 // Book variables
                 Book book;
@@ -327,7 +325,7 @@ namespace Hephaestus
                         );
                         bookFragment.Weight = 0.1f;
                         bookFragment.Model = objModel;
-                        book.InventoryArt = objInvArt;
+                        bookFragment.InventoryArt = objInvArt;
                         bookFragment.ObjectBounds = objBounds;
                         bookFragment.BookText =
                             $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding the process of {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
@@ -464,7 +462,7 @@ namespace Hephaestus
 
                     // Create a new COBJ record with the modified conditions
                     var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
-                    GetItemCountConditionData newCond = new GetItemCountConditionData();
+                    var newCond = new GetItemCountConditionData();
                     newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
                         newCond,
                         book.FormKey
@@ -476,12 +474,58 @@ namespace Hephaestus
                         {
                             ComparisonValue = 1,
                             CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                            Data = newCond
+                            Data = newCond,
                         }
                     );
 
                     if (settings.ShowDebugLogs)
                         Console.WriteLine($"    Patched {cobj.EditorID} with {book.EditorID}");
+
+                    // Blacksmith tutorial workaround
+
+                    if (
+                        cobj.FormKey == Skyrim.ConstructibleObject.RecipeWeaponIronDagger.FormKey
+                        || cobj.FormKey == Skyrim.ConstructibleObject.RecipeLeatherDeerHide.FormKey
+                        || cobj.FormKey == Skyrim.ConstructibleObject.RecipeArmorHideHelmet.FormKey
+                    )
+                    {
+                        var SmithTutorialDagger = new GetVMQuestVariableConditionData();
+                        SmithTutorialDagger.Quest = new FormLinkOrIndex<IQuestGetter>(
+                            SmithTutorialDagger,
+                            Skyrim.Quest.TutorialBlacksmithing.FormKey
+                        );
+                        SmithTutorialDagger.Quest.Link.SetTo(
+                            Skyrim.Quest.TutorialBlacksmithing.FormKey
+                        );
+                        var conditionBase = new ConditionFloat()
+                        {
+                            ComparisonValue = 10,
+                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                            Data = SmithTutorialDagger
+                        };
+
+                        if (
+                            cobj.FormKey
+                            == Skyrim.ConstructibleObject.RecipeWeaponIronDagger.FormKey
+                        )
+                        {
+                            conditionBase.ComparisonValue = 10;
+                        }
+                        else if (
+                            cobj.FormKey == Skyrim.ConstructibleObject.RecipeLeatherDeerHide.FormKey
+                        )
+                        {
+                            conditionBase.ComparisonValue = 50;
+                        }
+                        else if (
+                            cobj.FormKey == Skyrim.ConstructibleObject.RecipeArmorHideHelmet.FormKey
+                        )
+                        {
+                            conditionBase.ComparisonValue = 70;
+                        }
+
+                        modifiedCobj.Conditions.Add(conditionBase);
+                    }
                 }
 
                 if (settings.ShowDebugLogs)
