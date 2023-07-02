@@ -329,7 +329,6 @@ namespace Hephaestus
                         bookFragment.ObjectBounds = objBounds;
                         bookFragment.BookText =
                             $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding the process of {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
-                        string bookEditorIDTemplate = $"{objEditorID}_{schematicType}";
                         ;
                         bookFragment.Type = Book.BookType.NoteOrScroll;
                         bookFragment.Keywords = new Noggog.ExtendedList<
@@ -637,16 +636,92 @@ namespace Hephaestus
                         if (settings.ShowDebugLogs)
                             Console.WriteLine($"        Injected at level {existingLevel};");
                     }
+                }
 
-                    // Temporary "fix" for hitting the LVLI entry cap
+                // Temporary "fix" for hitting the LVLI entry cap
+
+                var overflownFormkeys = new Dictionary<FormKey, List<FormKey>>();
+
+                foreach (var lvliFormKey in itemLVLIs[createdItemFormKey])
+                {
+                    // Define LVLI and check if it's empty
+                    if (
+                        !state.LinkCache.TryResolve<ILeveledItemGetter>(
+                            lvliFormKey,
+                            out var leveledList
+                        )
+                    )
+                        continue;
+
                     if (leveledList.Entries?.Count >= 254)
                     {
+                        if (!overflownFormkeys.ContainsKey(createdItemFormKey))
+                            overflownFormkeys.Add(createdItemFormKey, new List<FormKey>());
+                        overflownFormkeys[createdItemFormKey].Add(leveledList.FormKey);
+                    }
+                }
+
+                if (!overflownFormkeys.ContainsKey(createdItemFormKey))
+                    continue;
+
+                Console.WriteLine(String.Empty);
+                Console.WriteLine($"oopsie doopsie uwu too many items in this leveled list");
+
+                if (
+                    overflownFormkeys[createdItemFormKey].Count
+                    == itemLVLIs[createdItemFormKey].Count
+                )
+                {
+                    // Define LVLI and check if it's empty
+                    if (
+                        !state.LinkCache.TryResolve<ILeveledItemGetter>(
+                            overflownFormkeys[createdItemFormKey][0],
+                            out var leveledList
+                        )
+                    )
+                        continue;
+
+                    foreach (var lvliFormKey in bookLVLIs[itemBOOK[createdItemFormKey]])
+                    {
+                        // Define LVLI and check if it's empty
+                        if (
+                            !state.LinkCache.TryResolve<ILeveledItemGetter>(
+                                lvliFormKey.Value,
+                                out var lvli
+                            )
+                        )
+                            continue;
+                        state.PatchMod.LeveledItems.Remove(lvli);
+                    }
+
+                    state.PatchMod.Books.Remove(itemBOOK[createdItem.FormKey]);
+                    state.PatchMod.Books.Remove(itemBOOKFragment[createdItem.FormKey]);
+
+                    // Delete cobj condition changes, book and book fragment cobjs
+                    foreach (var cobj in state.PatchMod.ConstructibleObjects)
+                    {
+                        if (
+                            itemCOBJs[createdItemFormKey].Any(e => e == cobj.FormKey)
+                            || cobj.CreatedObject.FormKey == itemBOOK[createdItem.FormKey]
+                            || cobj.CreatedObject.FormKey == itemBOOKFragment[createdItem.FormKey]
+                        )
+                        {
+                            state.PatchMod.ConstructibleObjects.Remove(cobj);
+                        }
+                    }
+
+                    // delete schematic
+                    state.PatchMod.LeveledItems.Remove(leveledList);
+                    Console.WriteLine($"undoing all the modifications made from this item");
+                }
+                else
+                {
+                    foreach (var lvliFormKey in overflownFormkeys[createdItemFormKey])
+                    {
+                        state.PatchMod.LeveledItems.Remove(lvliFormKey);
                         Console.WriteLine(
-                            $"oopsie doopsie uwu too many items in this leveled list, backing the heck up... ."
+                            $"undoing just the funky wunky lvli and keeping the rest"
                         );
-                        state.PatchMod.LeveledItems.Remove(leveledList);
-                        state.PatchMod.Books.Remove(itemBOOK[createdItem.FormKey]);
-                        state.PatchMod.Books.Remove(itemBOOKFragment[createdItem.FormKey]);
                     }
                 }
             }

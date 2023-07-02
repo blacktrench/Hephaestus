@@ -1,6 +1,6 @@
 {
   "Nickname": "Hephaestus",
-  "Visibility": "Exclude",
+  "Visibility": "IncludeButHide",
   "OneLineDescription": "Make crafting more 'fun' by requiring schematics and then putting those in loot!",
   "LongDescription": "Makes every craftable lootable item require a schematic/recipe in your inventory before being able to craft them. The schematic/recipe shows up in the same places that the base item would (on NPCs, in shops, in chests) with a customizable drop chance.",
   "PreferredAutoVersioning": "Default",
