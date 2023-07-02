@@ -8,7 +8,6 @@ using Mutagen.Bethesda.Synthesis;
 namespace Hephaestus
 {
     // **To Do**
-    // Patch the blacksmithing intro quest to give you the relevant schematics with the materials.
     // Add item blacklist?
     // Move bench types to customization
 
@@ -34,6 +33,7 @@ namespace Hephaestus
             Dictionary<FormKey, List<FormKey>> itemCOBJs = new();
             Dictionary<FormKey, List<FormKey>> itemLVLIs = new();
             Dictionary<FormKey, FormKey> itemBOOK = new();
+            Dictionary<FormKey, FormKey> itemBOOKFragment = new();
             Dictionary<FormKey, Dictionary<String, FormKey>> bookLVLIs = new();
             List<FormKey> benchWhitelist =
                 new()
@@ -321,7 +321,7 @@ namespace Hephaestus
                         bookFragment.Description =
                             $"Notes I made on the {processName} of {aAn} {objName}. Maybe if I collect {counter} of these I can then write up my own {schematicType.ToLower()}.";
                         bookFragment.Value = (uint)(
-                            Math.Min(Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)), 1)
+                            Math.Max(Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)), 1)
                         );
                         bookFragment.Weight = 0.1f;
                         bookFragment.Model = objModel;
@@ -336,6 +336,9 @@ namespace Hephaestus
                             IFormLinkGetter<IKeywordGetter>
                         >();
                         bookFragment.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
+
+                        // Add book fragment to dict
+                        itemBOOKFragment.Add(createdItem.FormKey, bookFragment.FormKey);
 
                         // Create COBJ item -> fragment
                         var itemToFragmentCOBJ = state.PatchMod.ConstructibleObjects.AddNew();
@@ -633,6 +636,17 @@ namespace Hephaestus
 
                         if (settings.ShowDebugLogs)
                             Console.WriteLine($"        Injected at level {existingLevel};");
+                    }
+
+                    // Temporary "fix" for hitting the LVLI entry cap
+                    if (leveledList.Entries?.Count >= 254)
+                    {
+                        Console.WriteLine(
+                            $"oopsie doopsie uwu too many items in this leveled list, backing the heck up... ."
+                        );
+                        state.PatchMod.LeveledItems.Remove(leveledList);
+                        state.PatchMod.Books.Remove(itemBOOK[createdItem.FormKey]);
+                        state.PatchMod.Books.Remove(itemBOOKFragment[createdItem.FormKey]);
                     }
                 }
             }
