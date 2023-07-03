@@ -9,6 +9,7 @@ namespace Hephaestus
 {
     // **To Do**
     // Add item blacklist?
+    // Add additional text in the book if the item cobj has other conditions for crafting
     // Move bench types to customization
 
     public class Program
@@ -42,6 +43,42 @@ namespace Hephaestus
                     Skyrim.Keyword.CraftingCookpot.FormKey,
                     Skyrim.Keyword.CraftingTanningRack.FormKey
                 };
+
+            var bookModelLib = new Dictionary<FormKey, Model>()
+            {
+                {
+                    Skyrim.Static.HighPolyJournal.FormKey,
+                    new Model() { File = "Clutter/Books/JournalLowPoly01.nif" }
+                },
+                {
+                    Skyrim.Static.HighPolyJournal02.FormKey,
+                    new Model() { File = "Clutter/Books/JournalLowPoly02.nif" }
+                },
+                {
+                    Skyrim.Static.HighPolyJournal03.FormKey,
+                    new Model() { File = "Clutter/Books/JournalLowPoly03.nif" }
+                }
+            };
+
+            var bookFragmentModelLib = new Dictionary<FormKey, Model>()
+            {
+                {
+                    Skyrim.Static.HighPolyNote.FormKey,
+                    new Model() { File = "Clutter/Books/Note.nif" }
+                },
+                {
+                    Skyrim.Static.HighPolyNote02.FormKey,
+                    new Model() { File = "Clutter/Books/Note02.nif" }
+                },
+                {
+                    Skyrim.Static.HighPolyNote03.FormKey,
+                    new Model() { File = "Clutter/Books/Note03.nif" }
+                },
+                {
+                    Skyrim.Static.HighPolyNote04.FormKey,
+                    new Model() { File = "Clutter/Books/Note04.nif" }
+                }
+            };
 
             Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
@@ -117,16 +154,13 @@ namespace Hephaestus
                     Console.WriteLine("=================================================");
                     Console.WriteLine(String.Empty);
                     Console.WriteLine($"Found {createdItemName.Name} ...");
-                    // Console.WriteLine("It's referenced in the following COBJs:");
-                    // Console.WriteLine($"{String.Join('\n', itemCOBJs[createdItem.FormKey])}");
-                    // Console.WriteLine("And the following LVLIs:");
-                    // Console.WriteLine($"{String.Join('\n', itemLVLIs[createdItem.FormKey])}");
                 }
                 else
                     Console.WriteLine($"Patching for {createdItemName.Name} ...");
 
                 // Deterministic seed
                 var random = new Random(createdItem.FormKey.ID.GetHashCode());
+                Console.WriteLine((float)random.NextDouble());
 
                 // Base Object
                 string? objName = createdItemName.Name;
@@ -144,13 +178,27 @@ namespace Hephaestus
                 // Book variables
                 Book book;
                 Book bookFragment;
-                var schematicBase = Skyrim.Scroll.EbonyFleshScroll.TryResolve(state.LinkCache);
-                var objInvArt = new FormLinkNullable<IStaticGetter>(
-                    schematicBase?.MenuDisplayObject.FormKey
+
+                // Randomize book model
+                var bookModelSetKey = bookModelLib.Keys.ElementAt(
+                    (int)Math.Round((bookModelLib.Count - 1) * (float)random.NextDouble())
                 );
-                Model objModel = schematicBase?.Model?.DeepCopy() ?? new Model();
-                ObjectBounds objBounds =
-                    schematicBase?.ObjectBounds?.DeepCopy() ?? new ObjectBounds();
+                if (!state.LinkCache.TryResolve<IStaticGetter>(bookModelSetKey, out var bookStatic))
+                    continue;
+
+                // Randomize fragment model
+                var bookFragmentModelSetKey = bookFragmentModelLib.Keys.ElementAt(
+                    (int)Math.Round((bookFragmentModelLib.Count - 1) * (float)random.NextDouble())
+                );
+                if (
+                    !state.LinkCache.TryResolve<IStaticGetter>(
+                        bookFragmentModelSetKey,
+                        out var bookFragmentStatic
+                    )
+                )
+                    continue;
+
+                // Initialize other
                 string? objBench = "Forge";
                 string? processName = "crafting";
                 string schematicType = "Schematic";
@@ -270,10 +318,13 @@ namespace Hephaestus
                             $"A {schematicType.ToLower()} that provides guidance on {processName} {aAn} {objName}. Without this, I won't be able to remember how to craft the item anymore.";
                         book.Value = objValue * noteToSchematicRatio;
                         book.Weight = 0.25f;
-                        book.Model = objModel;
-                        book.InventoryArt = objInvArt;
-                        book.ObjectBounds = objBounds;
-                        book.Type = Book.BookType.NoteOrScroll;
+                        book.Model = bookModelLib[bookModelSetKey];
+                        book.InventoryArt = new FormLinkNullable<IStaticGetter>(bookStatic);
+                        book.ObjectBounds = bookStatic.ObjectBounds.DeepCopy();
+                        book.Type = Book.BookType.BookOrTome;
+                        book.PickUpSound = new FormLinkNullable<ISoundDescriptorGetter>(
+                            Skyrim.SoundDescriptor.ITMNoteUp.FormKey
+                        );
                         book.Keywords = new Noggog.ExtendedList<IFormLinkGetter<IKeywordGetter>>();
                         book.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
 
@@ -281,36 +332,28 @@ namespace Hephaestus
                         List<string> flavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} looks like the notes of a madman, though I can somewhat decypher it. It seems to detail the process of {processName} {aAn} {objName} at a {objBench}",
-                                $"This {schematicType.ToLower()} seems to have been teared off from someone's journal. It seems to explain the process of {processName} {aAn} {objName} at a {objBench}",
-                                $"This {schematicType.ToLower()} goes into great detail on the steps of {processName} {aAn} {objName} at a {objBench}",
-                                $"This {schematicType.ToLower()} contains the secrets to {processName} {aAn} {objName} at a {objBench}",
-                                $"This {schematicType.ToLower()} is filled with scribbles and notes on the steps of {processName} {aAn} {objName} at a {objBench}",
-                                $"This {schematicType.ToLower()} still has some stains of blood on it, it describes the process of {processName} {aAn} {objName} at a {objBench}"
+                                $"This {schematicType.ToLower()} looks like the notes of a madman, though I can somewhat decypher it. It seems to detail the process of {processName} {aAn} {objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} seems to have been teared off from someone's journal. It seems to explain the process of {processName} {aAn} {objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} goes into great detail on the steps of {processName} {aAn} {objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} contains the secrets to {processName} {aAn} {objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} is filled with scribbles and notes on the steps of {processName} {aAn} {objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} still has some stains of blood on it, it describes the process of {processName} {aAn} {objName} at a {objBench}."
                             };
 
                         // Formatting book contents
                         List<string> ArmorflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} seems to have been written by a smith apprentice, from the looks of it it describes the process of {processName} {aAn} {objName} at a {objBench}",
+                                $"This {schematicType.ToLower()} seems to have been written by a smith apprentice, from the looks of it it describes the process of {processName} {aAn} {objName} at a {objBench}.",
                                 $"This {schematicType.ToLower()} is a sketch, it seems to have been drawn by a designer. It shows the steps of {processName} {aAn} {objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
-                                $"This {schematicType.ToLower()} is a contract, it seems to have been signed by a soldier. It states the steps of {processName} {aAn} {objName} at a {objBench}. I can see the duty and the loyalty of this piece of armor, I wonder who it serves.",
                                 $"This {schematicType.ToLower()} is a diary, it seems to have been written by a traveler. It narrates the steps of {processName} {aAn} {objName} at a {objBench}. I can see the experience and the wisdom of this piece of armor, I wonder what it has seen.",
-                                $"This {schematicType.ToLower()} is a recipe, it seems to have been cooked by a chef. It lists the steps of {processName} {aAn} {objName} at a {objBench}. I can see the taste and the nutrition of this piece of armor, I wonder how it feels.",
                                 $"This {schematicType.ToLower()} is a prayer, it seems to have been uttered by a priest. It blesses the steps of {processName} {aAn} {objName} at a {objBench}. I can see the faith and the grace of this piece of armor, I wonder what it protects.",
-                                $"This {schematicType.ToLower()} is a riddle, it seems to have been posed by a sphinx. It puzzles the steps of {processName} {aAn} {objName} at a {objBench}. I can see the mystery and the enigma of this piece of armor, I wonder what it hides.",
                                 $"This {schematicType.ToLower()} is a sketch, it seems to have been drawn by a designer. It shows the steps of {processName} {aAn} {objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
                                 $"To create {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. The {objName} is a rare piece of armor that can be found only in certain places. The {processName} method involves using special skills and tools to create a complex and unique design.",
-                                $"This {schematicType.ToLower()} explains the advanced steps to craft {aAn} {objName} at a {objBench}. The {objName} is a legendary piece of armor that can be obtained only by the worthy. The {processName} technique involves mastering the secrets and arts of the craft to create an extraordinary and powerful design.",
-                                $"This {schematicType.ToLower()} is a contract, it seems to have been signed by a soldier. It states the steps of {processName} {aAn} {objName} at a {objBench}. I can see the duty and the loyalty of this piece of armor, I wonder who it serves.",
-                                $"This {schematicType.ToLower()} is a diary, it seems to have been written by a traveler. It narrates the steps of {processName} {aAn} {objName} at a {objBench}. I can see the experience and the wisdom of this piece of armor, I wonder what it has seen.",
                                 $"This {schematicType.ToLower()} is a guide, it seems to have been written by a master. It instructs the steps of {processName} {aAn} {objName} at a {objBench}. I can see the skill and the expertise of this piece of armor, I wonder how it performs.",
-                                $"This {schematicType.ToLower()} is a riddle, it seems to have been posed by a sphinx. It puzzles the steps of {processName} {aAn} {objName} at a {objBench}. I can see the mystery and the enigma of this piece of armor, I wonder what it hides.",
+                                $"This {schematicType.ToLower()} is written as a riddle. It puzzles the steps of {processName} {aAn} {objName} at a {objBench}. I can see the mystery and the enigma of this piece of armor, I wonder what it hides.",
                                 $"This {schematicType.ToLower()} is a letter, it seems to have been sent by a friend. It shares the steps of {processName} {aAn} {objName} at a {objBench}. I can see the kindness and the generosity of this piece of armor, I wonder how it helps.",
-                                $"This {schematicType.ToLower()} is a painting, it seems to have been created by an artist. It depicts the steps of {processName} {aAn} {objName} at a {objBench}. I can see the color and the expression of this piece of armor, I wonder how it inspires.",
-                                $"This {schematicType.ToLower()} is a list, it seems to have been made by a collector. It records the steps of {processName} {aAn} {objName} at a {objBench}. I can see the rarity and the value of this piece of armor, I wonder how it shines.",
-                                $"This {schematicType.ToLower()} is a dream, it seems to have been seen by a visionary. It imagines the steps of {processName} {aAn} {objName} at a {objBench}. I can see the wonder and the possibility of this piece of armor, I wonder how it changes."
+                                $"This {schematicType.ToLower()} is made up of vivid illustrations, it seems to have been created by an artist. It depicts the steps of {processName} {aAn} {objName} at a {objBench}. I can see the color and the expression of this piece of armor, I wonder how it inspires.",
                             };
 
                         // Formatting book contents
@@ -329,9 +372,8 @@ namespace Hephaestus
                                 $"This {schematicType.ToLower()} is a neat printout, it seems to have been made by a professional. It shows the steps of {processName} {aAn} {objName} at a {objBench}. I can see the precision and the efficiency of this weapon, I admire the skill behind it.",
                                 $"This {schematicType.ToLower()} is a torn page, it seems to have been ripped from a book. It explains the steps of {processName} {aAn} {objName} at a {objBench}. I can see the complexity and the diversity of this weapon, I wonder how it works.",
                                 $"This {schematicType.ToLower()} is a handwritten note, it seems to have been left by a friend. It outlines the steps of {processName} {aAn} {objName} at a {objBench}. I can see the friendship and the care of this weapon, I appreciate the gesture.",
-                                $"This {schematicType.ToLower()} is a coded message, it seems to have been written by a spy. It conceals the steps of {processName} {aAn} {objName} at a {objBench}. I can see the stealth and the cunning of this weapon, I wonder who it is for.",
+                                $"This {schematicType.ToLower()} is a coded message, it seems to have been written by a spy. It conceals the steps of {processName} {aAn} {objName} at a {objBench}. I can see the stealth and the cunning of this weapon, I wonder who it was written for.",
                                 $"This {schematicType.ToLower()} is a burnt paper, it seems to have been salvaged from a fire. It preserves the steps of {processName} {aAn} {objName} at a {objBench}. I can see the damage and the danger of this weapon, I hope it is not too late.",
-                                $"This {schematicType.ToLower()} is a glossy brochure, it seems to have been made by a merchant. It advertises the steps of {processName} {aAn} {objName} at a {objBench}. I can see the profit and the appeal of this weapon, I wonder how much it costs.",
                                 $"This {schematicType.ToLower()} is a dirty rag, it seems to have been used as a wipe. It stains the steps of {processName} {aAn} {objName} at a {objBench}. I can see the dirt and the grime of this weapon, I hope it is still usable.",
                                 $"This {schematicType.ToLower()} is a golden plaque, it seems to have been awarded by a king. It honors the steps of {processName} {aAn} {objName} at a {objBench}. I can see the glory and the honor of this weapon, I wonder who earned it.",
                                 $"This {schematicType.ToLower()} is a crumpled paper, it seems to have been thrown away. It discards the steps of {processName} {aAn} {objName} at a {objBench}. I can see the failure and the frustration of this weapon, I wonder what went wrong.",
@@ -347,10 +389,8 @@ namespace Hephaestus
                         List<string> ShieldflavourText =
                             new()
                             {
-                                $"A designer must have drawn this {schematicType.ToLower()}, it shows the steps of {processName} {aAn} {objName} at a {objBench} with style and flair. I wonder how this shield looks, it must be very fashionable.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to create {aAn} {objName}. This shield is a rare find, it can only be found in certain places. I will need to use special skills and tools to create a complex and unique design, following the {processName} method.",
                                 $"This {schematicType.ToLower()} reveals the secrets and arts of the craft, explaining the advanced steps to craft {aAn} {objName} using a {objBench}. This shield is a legendary item, only the worthy can obtain it. It requires mastering the {processName} technique to create an extraordinary and powerful design.",
-                                $"A soldier must have signed this contract, it states the steps of {processName} {aAn} {objName} at a {objBench} with duty and loyalty. I wonder who this shield serves, it must be very reliable.",
+                                $"A soldier must have written this {schematicType.ToLower()}, it states the steps of {processName} {aAn} {objName} at a {objBench} with duty and loyalty. I wonder who this shield serves, it must be very reliable.",
                                 $"I will need this {schematicType.ToLower()} and access to a {objBench} to make {aAn} {objName}. This shield is a common item, it can be used for various purposes. I will need to work with the available materials to create a simple and functional design, following the {processName} technique.",
                                 $"A traveler must have written this {schematicType.ToLower()}, it narrates the steps of {processName} {aAn} {objName} at a {objBench} with experience and wisdom. I wonder what this shield has seen, it must have been through many adventures.",
                                 $"A priest must have uttered this {schematicType.ToLower()}, it blesses the steps of {processName} {aAn} {objName} at a {objBench} with faith and grace. I wonder what this shield protects, it must be very sacred.",
@@ -385,21 +425,18 @@ namespace Hephaestus
                         List<string> JewelryflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} shows me how to {processName} {aAn} {objName} using a {objBench}. This {objName} is a beautiful piece of jewelry, it is good for any occasion. I will need to use shiny materials and follow the {processName} method to make it. I can see the sparkle and the elegance of this piece, it makes me dazzled.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processName} {aAn} {objName}. This {objName} is a rare piece of jewelry, it can only be found in certain places. I will need to use precious materials and follow the {processName} technique to make it. I can feel the value and the luxury of this piece, it makes me rich.",
+                                $"This {schematicType.ToLower()} shows me how to get started on {processName} {aAn} {objName} using a {objBench}. This {objName} is a beautiful piece of jewelry, it is good for any occasion. I will need to use shiny materials and follow the {processName} method to make it. I can see the sparkle and the elegance of this piece, it makes me dazzled.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to get started on {processName} {aAn} {objName}. This {objName} is a rare piece of jewelry, it can only be found in certain places. I will need to use precious materials and follow the {processName} technique to make it. I can feel the value and the luxury of this piece, it makes me rich.",
                                 $"This {schematicType.ToLower()} explains the steps of {processName} {aAn} {objName} at a {objBench}. This {objName} is a magical piece of jewelry, it has a special power and effect. I will need to master the skills and the tools to make it. I can see the magic and the mystery of this piece, it makes me curious.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to craft {aAn} {objName}. This {objName} is a personal piece of jewelry, it is my own creation and invention. I will need to use my favorite materials and follow my own {processName} technique to make it. I can see the creativity and the expression of this piece, it makes me proud.",
-                                $"This {schematicType.ToLower()} instructs me how to {processName} {aAn} {objName} at a {objBench}. This {objName} is a special piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processName} method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
-                                $"This {schematicType.ToLower()} teaches me how to {processName} {aAn} {objName} using a {objBench}. This {objName} is a ancient piece of jewelry, it has a long history and tradition. I will need to use rare materials and master the {processName} technique to make it. I can see the wisdom and the knowledge of this piece, it makes me curious.",
-                                $"To {processName} {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a exotic piece of jewelry, it comes from a faraway land. I will need to use unique materials and follow the {processName} method to make it. I can see the spice and the zest of this piece, it makes me adventurous.",
+                                $"This {schematicType.ToLower()} contains the instructions on {processName} {aAn} {objName} at a {objBench}. This {objName} is a special piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processName} method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
+                                $"This {schematicType.ToLower()} teaches me the way of {processName} {aAn} {objName} using a {objBench}. This {objName} is a ancient piece of jewelry, it has a long history and tradition. I will need to use rare materials and master the {processName} technique to make it. I can see the wisdom and the knowledge of this piece, it makes me curious.",
+                                $"To get started on {processName} {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a exotic piece of jewelry, it comes from a faraway land. I will need to use unique materials and follow the {processName} method to make it. I can see the spice and the zest of this piece, it makes me adventurous.",
                                 $"This {schematicType.ToLower()} reveals the secrets of {processName} {aAn} {objName} at a {objBench}. This {objName} is a legendary piece of jewelry, only the worthy can obtain it. I will need to use special materials and master the secrets and arts of the craft to make it. I can see the glory and the honor of this piece, it makes me proud.",
                                 $"To craft {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a simple piece of jewelry, but it has a hidden twist. I will need to use common materials and follow the {processName} technique to make it. I can taste the sweetness and the sourness of this piece, it surprises me.",
-                                $"This {schematicType.ToLower()} tells me how to {processName} {aAn} {objName} at a {objBench}. This {objName} is a elegant piece of jewelry, it is perfect for celebrations and parties. I will need to use shiny materials and follow the {processName} method to make it. I can hear the laughter and the joy of this piece, it makes me festive.",
-                                $"This {schematicType.ToLower()} shows me how to {processName} {aAn} {objName} using a {objBench}. This {objName} is a colorful piece of jewelry, it is good for any occasion. I will need to use bright materials and follow the {processName} method to make it. I can see the sparkle and the flair of this piece, it makes me dazzled.",
+                                $"This {schematicType.ToLower()} tells me the way of {processName} {aAn} {objName} at a {objBench}. This {objName} is a elegant piece of jewelry, it is perfect for celebrations and parties. I will need to use shiny materials and follow the {processName} method to make it. I can hear the laughter and the joy of this piece, it makes me festive.",
+                                $"This {schematicType.ToLower()} shows me how to get started on {processName} {aAn} {objName} using a {objBench}. This {objName} is a colorful piece of jewelry, it is good for any occasion. I will need to use bright materials and follow the {processName} method to make it. I can see the sparkle and the flair of this piece, it makes me dazzled.",
                                 $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processName} {aAn} {objName}. This {objName} is a mysterious piece of jewelry, it has a secret ingredient and a hidden effect. I will need to use unknown materials and follow the {processName} technique to make it. I can taste the mystery and the magic of this piece, it makes me curious.",
                                 $"This {schematicType.ToLower()} explains the steps of {processName} {aAn} {objName} at a {objBench}. This {objName} is a beautiful piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processName} method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to make {aAn} {objName}. This {objName} is a personal piece of jewelry, it is my own creation and invention. I will need to use my favorite materials and follow my own {processName} technique to make it. I can see the creativity and the expression of this piece, it makes me proud.",
-                                $"This {schematicType.ToLower()} instructs me how to {processName} {aAn} {objName} at a {objBench}. This {objName} is a rare piece of jewelry, it can only be found in certain places. I will need to use precious materials and follow the {processName} technique to make it. I can feel the value and the luxury of this piece, it makes me rich.",
                             };
 
                         switch (objType)
@@ -424,7 +461,7 @@ namespace Hephaestus
                         string frontPage =
                             $"[pagebreak]\n<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]";
                         book.BookText =
-                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n{requiredItems}\n{flavourText[random.Next(flavourText.Count)]} {processName} {aAn} {objName} at a {objBench}.";
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n{requiredItems}\n{flavourText[random.Next(flavourText.Count)]}";
                         ;
 
                         // Add book to dict
@@ -464,13 +501,18 @@ namespace Hephaestus
                             Math.Max(Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)), 1)
                         );
                         bookFragment.Weight = 0.1f;
-                        bookFragment.Model = objModel;
-                        bookFragment.InventoryArt = objInvArt;
-                        bookFragment.ObjectBounds = objBounds;
+                        bookFragment.Model = bookFragmentModelLib[bookFragmentModelSetKey];
+                        bookFragment.InventoryArt = new FormLinkNullable<IStaticGetter>(
+                            bookFragmentStatic
+                        );
+                        bookFragment.ObjectBounds = bookFragmentStatic.ObjectBounds.DeepCopy();
+                        bookFragment.PickUpSound = new FormLinkNullable<ISoundDescriptorGetter>(
+                            Skyrim.SoundDescriptor.ITMNoteUp.FormKey
+                        );
                         bookFragment.BookText =
                             $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding the process of {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
                         ;
-                        bookFragment.Type = Book.BookType.NoteOrScroll;
+                        bookFragment.Type = Book.BookType.BookOrTome;
                         bookFragment.Keywords = new Noggog.ExtendedList<
                             IFormLinkGetter<IKeywordGetter>
                         >();
@@ -518,8 +560,12 @@ namespace Hephaestus
                             itemToFragmentCOBJ.Items.Count;
 
                         // Add conditions (so it doesn't clutter the menu)
-                        GetItemCountConditionData itemToFragmentCOBJCond =
-                            new GetItemCountConditionData();
+                        var itemToFragmentCOBJCond = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        ;
                         itemToFragmentCOBJCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
                             itemToFragmentCOBJCond,
                             createdItem.FormKey
@@ -531,7 +577,7 @@ namespace Hephaestus
                             {
                                 ComparisonValue = 1,
                                 CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                                Data = itemToFragmentCOBJCond
+                                Data = itemToFragmentCOBJCond,
                             }
                         );
 
@@ -560,21 +606,26 @@ namespace Hephaestus
                         bookCOBJ.CreatedObjectCount = (ushort?)bookCOBJ.Items.Count;
 
                         // Add conditions (so it doesn't clutter the menu)
-                        GetItemCountConditionData bookCOBJCond = new GetItemCountConditionData();
+                        var bookCOBJCond = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        ;
                         bookCOBJCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
                             bookCOBJCond,
-                            bookCOBJ.FormKey
+                            bookFragment.FormKey
                         );
-                        bookCOBJCond.ItemOrList.Link.SetTo(book);
+                        bookCOBJCond.ItemOrList.Link.SetTo(bookFragment);
 
-                        bookCOBJ.Conditions.Add(
-                            new ConditionFloat()
-                            {
-                                ComparisonValue = noteToSchematicRatio,
-                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                                Data = bookCOBJCond
-                            }
-                        );
+                        var bookCOBJCondItem = new ConditionFloat()
+                        {
+                            ComparisonValue = noteToSchematicRatio,
+                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                            Data = bookCOBJCond
+                        };
+
+                        bookCOBJ.Conditions.Add(bookCOBJCondItem);
 
                         if (settings.ShowDebugLogs)
                         {
@@ -604,7 +655,11 @@ namespace Hephaestus
 
                     // Create a new COBJ record with the modified conditions
                     var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
-                    var newCond = new GetItemCountConditionData();
+                    var newCond = new GetItemCountConditionData()
+                    {
+                        RunOnType = Condition.RunOnType.Reference,
+                        Reference = Skyrim.PlayerRef,
+                    };
                     newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
                         newCond,
                         book.FormKey
@@ -617,6 +672,7 @@ namespace Hephaestus
                             ComparisonValue = 1,
                             CompareOperator = CompareOperator.GreaterThanOrEqualTo,
                             Data = newCond,
+                            Flags = Condition.Flag.OR
                         }
                     );
 
@@ -631,7 +687,7 @@ namespace Hephaestus
                         || cobj.FormKey == Skyrim.ConstructibleObject.RecipeArmorHideHelmet.FormKey
                     )
                     {
-                        var SmithTutorialDagger = new GetVMQuestVariableConditionData();
+                        var SmithTutorialDagger = new GetStageConditionData();
                         SmithTutorialDagger.Quest = new FormLinkOrIndex<IQuestGetter>(
                             SmithTutorialDagger,
                             Skyrim.Quest.TutorialBlacksmithing.FormKey
