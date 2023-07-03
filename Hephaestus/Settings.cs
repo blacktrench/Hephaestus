@@ -28,7 +28,7 @@ namespace Hephaestus
         // The key is a string of the form "Race", e.g. "NordRace"
         // the "Default" entry is not an actual race but is used as the default if ScaleEverything is toggled on
         // The value is an instance of BaseSettings
-        [SynthesisSettingName("Crafting furniture presets")]
+        [SynthesisSettingName("Crafting furniture settings")]
         public List<BaseSettings> BenchSettings { get; set; } =
             new()
             {

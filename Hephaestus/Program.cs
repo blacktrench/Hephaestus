@@ -75,8 +75,8 @@ namespace Hephaestus
 
             Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
+            Console.WriteLine(String.Empty);
             Console.WriteLine("Building cache ...");
-            Console.WriteLine("=================================================");
             Console.WriteLine(String.Empty);
 
             // Enumerate through COBJs and save the data for later for the items that have names and values, for which the COBJ has a whitelisted keyword and which are present in at least one leveled list
@@ -128,9 +128,8 @@ namespace Hephaestus
 
             Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
-            Console.WriteLine("Assigning item types and prepping things ...");
-            Console.WriteLine("=================================================");
             Console.WriteLine(String.Empty);
+            Console.WriteLine("Assigning item types and prepping things ...");
 
             foreach (var createdItemFormKey in itemCOBJs.Keys)
             {
@@ -146,7 +145,7 @@ namespace Hephaestus
                 if (settings.ShowDebugLogs)
                 {
                     Console.WriteLine(String.Empty);
-                    Console.WriteLine("=================================================");
+                    Console.WriteLine("=======================");
                     Console.WriteLine(String.Empty);
                     Console.WriteLine($"Found {createdItemName.Name} ...");
                 }
@@ -695,8 +694,85 @@ namespace Hephaestus
                     }
                 }
 
+                if (
+                    settings.TemperReqSchematic
+                    && state.LoadOrder.PriorityOrder
+                        .ConstructibleObject()
+                        .WinningOverrides()
+                        .Any(
+                            e =>
+                                (
+                                    e.CreatedObject.FormKey == createdItemFormKey
+                                    && (
+                                        e.WorkbenchKeyword.FormKey
+                                            == Skyrim.Keyword.CraftingSmithingArmorTable.FormKey
+                                        || e.WorkbenchKeyword.FormKey
+                                            == Skyrim
+                                                .Keyword
+                                                .CraftingSmithingSharpeningWheel
+                                                .FormKey
+                                    )
+                                )
+                        )
+                )
+                {
+                    foreach (
+                        IConstructibleObjectGetter temperCOBJ in state.LoadOrder.PriorityOrder
+                            .ConstructibleObject()
+                            .WinningOverrides()
+                    )
+                    {
+                        // Define LVLI and check if it's empty
+                        if (
+                            temperCOBJ.CreatedObject.FormKey != createdItemFormKey
+                            || (
+                                temperCOBJ.WorkbenchKeyword.FormKey
+                                    != Skyrim.Keyword.CraftingSmithingArmorTable.FormKey
+                                && temperCOBJ.WorkbenchKeyword.FormKey
+                                    != Skyrim.Keyword.CraftingSmithingSharpeningWheel.FormKey
+                            )
+                        )
+                            continue;
+
+                        if (settings.ShowDebugLogs)
+                        {
+                            Console.WriteLine(String.Empty);
+                            Console.WriteLine(
+                                $"Patching tempering COBJs to require new schematics ..."
+                            );
+                        }
+
+                        // Set up condition
+                        var newCond = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            newCond,
+                            itemBOOK[createdItemFormKey]
+                        );
+                        newCond.ItemOrList.Link.SetTo(itemBOOK[createdItemFormKey]);
+
+                        // add condition
+                        var modifiedTemperCobj =
+                            state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(temperCOBJ);
+                        modifiedTemperCobj.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = 1,
+                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                                Data = newCond,
+                            }
+                        );
+                    }
+                }
+
                 if (settings.ShowDebugLogs)
+                {
+                    Console.WriteLine(String.Empty);
                     Console.WriteLine($"Patching LVLIs to include new schematics ...");
+                }
 
                 foreach (FormKey lvliFormKey in itemLVLIs[createdItemFormKey])
                 {
