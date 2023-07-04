@@ -55,7 +55,7 @@ namespace Hephaestus
                 }
             };
 
-        [SynthesisSettingName("Drop chance")]
+        [SynthesisSettingName("Drop chance % (out of 100)")]
         [SynthesisDescription("Goes from 0 to 100, it affects how likely schematics are to drop")]
         [SynthesisTooltip("Goes from 0 to 100, it affects how likely schematics are to drop")]
         public int DropChance { get; set; } = 1;
