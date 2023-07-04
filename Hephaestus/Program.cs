@@ -7,11 +7,6 @@ using Mutagen.Bethesda.Synthesis;
 
 namespace Hephaestus
 {
-    // **To Do**
-    // Add item blacklist?
-    // Add additional text in the book if the item cobj has other conditions for crafting
-    // Move bench types to customization
-
     public class Program
     {
         static Lazy<Settings> _settings = null!;
@@ -96,6 +91,11 @@ namespace Hephaestus
                 )
                     continue;
 
+                // Skip if in blacklist
+                if (settings.itemBlacklist == null || settings.itemBlacklist.Contains(createdItem))
+                    continue;
+
+                // Skip if item value can't be grabbed
                 if (createdItem is not IWeightValueGetter && createdItem is not IWeaponGetter)
                     continue;
 
@@ -239,7 +239,6 @@ namespace Hephaestus
                 {
                     Console.WriteLine(String.Empty);
                     Console.WriteLine($"Creating {objName} schematics and patching COBJs ...");
-                    Console.WriteLine(String.Empty);
                 }
 
                 foreach (FormKey cobjFormKey in itemCOBJs[createdItemFormKey])
@@ -253,11 +252,6 @@ namespace Hephaestus
                     )
                         continue;
 
-                    Console.WriteLine(
-                        settings.BenchSettings.FindIndex(
-                            e => e.BenchKeyword.FormKey == cobj.WorkbenchKeyword.FormKey
-                        )
-                    );
                     // Set values based on bench
                     var curBenchSettings = settings.BenchSettings[
                         settings.BenchSettings.FindIndex(
@@ -297,7 +291,7 @@ namespace Hephaestus
                         book.Name = $"{objType} {schematicType}: {objName}";
                         book.Description =
                             $"A {schematicType.ToLower()} that provides guidance on crafting {aAn} {objName}. Without this, I won't be able to remember how to to do so anymore.";
-                        book.Value = objValue * noteToSchematicRatio;
+                        book.Value = objValue * (noteToSchematicRatio + 2);
                         book.Weight = 0.25f;
                         book.Model = bookModelLib[bookModelSetKey];
                         book.InventoryArt = new FormLinkNullable<IStaticGetter>(bookStatic);
@@ -441,8 +435,31 @@ namespace Hephaestus
 
                         string frontPage =
                             $"<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]";
+
+                        string otherConditions = String.Empty;
+
+                        if (cobj.Conditions.Count > 0)
+                        {
+                            otherConditions =
+                                $"I understand most of this {schematicType.ToLower()}, but I think I am missing some key knowledge before being able to work with this.";
+
+                            if (
+                                (cobj.Conditions[0].Data is HasPerkConditionData cobjPerkCond)
+                                && (
+                                    state.LinkCache.TryResolve<IPerkGetter>(
+                                        cobjPerkCond.Perk.EnumerateFormLinks().ToList()[0].FormKey,
+                                        out var cobjPerk
+                                    )
+                                )
+                            )
+                            {
+                                otherConditions =
+                                    $"I understand most of this {schematicType.ToLower()}, but I think I am missing some key knowledge on {cobjPerk.Name} before being able to work with this.";
+                            }
+                        }
+
                         book.BookText =
-                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n{requiredItems}\n{flavourText[random.Next(flavourText.Count)]}";
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n{requiredItems}\n<font face='$HandwrittenFont'>{flavourText[random.Next(flavourText.Count)]} {otherConditions}</font>";
                         ;
 
                         // Add book to dict
@@ -491,7 +508,7 @@ namespace Hephaestus
                             Skyrim.SoundDescriptor.ITMNoteUp.FormKey
                         );
                         bookFragment.BookText =
-                            $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding the process of {processName}ing it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
+                            $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding how to {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
                         ;
                         bookFragment.Type = Book.BookType.BookOrTome;
                         bookFragment.Keywords = new Noggog.ExtendedList<
@@ -655,19 +672,19 @@ namespace Hephaestus
                         || cobj.FormKey == Skyrim.ConstructibleObject.RecipeArmorHideHelmet.FormKey
                     )
                     {
-                        var SmithTutorialDagger = new GetStageConditionData();
-                        SmithTutorialDagger.Quest = new FormLinkOrIndex<IQuestGetter>(
-                            SmithTutorialDagger,
+                        var SmithTutorialCond = new GetStageConditionData();
+                        SmithTutorialCond.Quest = new FormLinkOrIndex<IQuestGetter>(
+                            SmithTutorialCond,
                             Skyrim.Quest.TutorialBlacksmithing.FormKey
                         );
-                        SmithTutorialDagger.Quest.Link.SetTo(
+                        SmithTutorialCond.Quest.Link.SetTo(
                             Skyrim.Quest.TutorialBlacksmithing.FormKey
                         );
                         var conditionBase = new ConditionFloat()
                         {
                             ComparisonValue = 10,
                             CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                            Data = SmithTutorialDagger
+                            Data = SmithTutorialCond
                         };
 
                         if (
@@ -694,27 +711,8 @@ namespace Hephaestus
                     }
                 }
 
-                if (
-                    settings.TemperReqSchematic
-                    && state.LoadOrder.PriorityOrder
-                        .ConstructibleObject()
-                        .WinningOverrides()
-                        .Any(
-                            e =>
-                                (
-                                    e.CreatedObject.FormKey == createdItemFormKey
-                                    && (
-                                        e.WorkbenchKeyword.FormKey
-                                            == Skyrim.Keyword.CraftingSmithingArmorTable.FormKey
-                                        || e.WorkbenchKeyword.FormKey
-                                            == Skyrim
-                                                .Keyword
-                                                .CraftingSmithingSharpeningWheel
-                                                .FormKey
-                                    )
-                                )
-                        )
-                )
+                // Disabling since for some reason conditions don't work on tempering cobjs?
+                if (settings.TemperReqSchematic)
                 {
                     foreach (
                         IConstructibleObjectGetter temperCOBJ in state.LoadOrder.PriorityOrder
@@ -755,14 +753,51 @@ namespace Hephaestus
                         newCond.ItemOrList.Link.SetTo(itemBOOK[createdItemFormKey]);
 
                         // add condition
-                        var modifiedTemperCobj =
+                        var modifiedTemperCOBJ =
                             state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(temperCOBJ);
-                        modifiedTemperCobj.Conditions.Add(
+
+                        // Blacksmith tutorial workaround
+
+                        if (
+                            temperCOBJ.FormKey
+                                == Skyrim.ConstructibleObject.TemperWeaponIronDagger.FormKey
+                            || temperCOBJ.FormKey
+                                == Skyrim.ConstructibleObject.TemperArmorHideHelmet.FormKey
+                        )
+                        {
+                            var SmithTutorialCond = new GetStageConditionData();
+                            SmithTutorialCond.Quest = new FormLinkOrIndex<IQuestGetter>(
+                                SmithTutorialCond,
+                                Skyrim.Quest.TutorialBlacksmithing.FormKey
+                            );
+                            SmithTutorialCond.Quest.Link.SetTo(
+                                Skyrim.Quest.TutorialBlacksmithing.FormKey
+                            );
+                            var conditionBase = new ConditionFloat()
+                            {
+                                ComparisonValue = 30,
+                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                                Data = SmithTutorialCond,
+                                Flags = Condition.Flag.OR
+                            };
+
+                            if (
+                                temperCOBJ.FormKey
+                                == Skyrim.ConstructibleObject.TemperArmorHideHelmet.FormKey
+                            )
+                            {
+                                conditionBase.ComparisonValue = 90;
+                            }
+
+                            modifiedTemperCOBJ.Conditions.Add(conditionBase);
+                        }
+
+                        modifiedTemperCOBJ.Conditions.Add(
                             new ConditionFloat()
                             {
                                 ComparisonValue = 1,
                                 CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                                Data = newCond,
+                                Data = newCond
                             }
                         );
                     }
