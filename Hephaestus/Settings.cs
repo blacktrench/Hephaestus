@@ -82,6 +82,6 @@ namespace Hephaestus
         public List<String> LovedOnesName { get; set; } = new();
 
         [SynthesisSettingName("(Debug) Show patched item info")]
-        public bool ShowDebugLogs { get; set; } = true;
+        public bool ShowDebugLogs { get; set; } = false;
     }
 }
