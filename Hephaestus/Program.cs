@@ -546,7 +546,10 @@ namespace Hephaestus
                 string? aAn;
                 if (objName?.IndexOfAny(vowels) == 0)
                     aAn = "an ";
-                else if (createdItemFormKey == Skyrim.MiscItem.LeatherStrips.FormKey)
+                else if (
+                    (createdItemFormKey == Skyrim.MiscItem.LeatherStrips.FormKey)
+                    || (createdItemFormKey == Skyrim.MiscItem.Leather01.FormKey)
+                )
                     aAn = "";
                 else
                     aAn = "a ";
@@ -568,7 +571,7 @@ namespace Hephaestus
                         {
                             case BipedObjectFlag.Hands
                             or BipedObjectFlag.Feet:
-                                aAn = "a pair of";
+                                aAn = "a pair of ";
                                 break;
                             case BipedObjectFlag.Amulet
                             or BipedObjectFlag.Ring:
@@ -611,7 +614,7 @@ namespace Hephaestus
                     string objBench = curBenchSettings.objBenchName ?? "crafting bench";
                     string schematicType = curBenchSettings.schematicTypeName ?? "Schematic";
                     string processName = curBenchSettings.processName ?? "craft";
-                    string processNameCont = $"{processName}";
+                    string processNameCont = $"{processName}ing";
 
                     if (vowels.Any(e => e == processName[processName.Length - 1]))
                         processNameCont = $"{processName.Substring(0, processName.Length - 1)}ing";
@@ -896,7 +899,7 @@ namespace Hephaestus
                         }
 
                         book.BookText =
-                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourText[random.Next(flavourText.Count)]} {otherConditions}</font>";
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourText[random.Next(flavourText.Count)]} {otherConditions}</font></p>";
                         ;
 
                         // Add book to dict
@@ -941,7 +944,7 @@ namespace Hephaestus
                             };
 
                         bookPlayer.BookText =
-                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourTextPlayer[random.Next(flavourTextPlayer.Count)]} {otherConditions}</font>";
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourTextPlayer[random.Next(flavourTextPlayer.Count)]} {otherConditions}</font></p>";
                         ;
 
                         // Add book to dict
@@ -949,19 +952,7 @@ namespace Hephaestus
 
                         // create a new book fragment
                         bookFragment = state.PatchMod.Books.AddNew(book.EditorID);
-                        string? counter = "a couple times";
-                        switch (noteToSchematicRatio)
-                        {
-                            case (<= 6):
-                                counter = "multiple times";
-                                break;
-                            case (<= 8):
-                                counter = "a fair amount";
-                                break;
-                            case (<= 10):
-                                counter = "quite a fair amount";
-                                break;
-                        }
+                        string counter = $"about {noteToSchematicRatio} times";
 
                         // Set the fragment properties
                         bookFragment.EditorID = $"{book.EditorID}_Fragment";
@@ -1011,6 +1002,15 @@ namespace Hephaestus
                         itemToFragmentCOBJ.WorkbenchKeyword = new FormLinkNullable<IKeywordGetter>(
                             cobj.WorkbenchKeyword.FormKey
                         );
+
+                        if (settings.useSmelter)
+                        {
+                            itemToFragmentCOBJ.WorkbenchKeyword =
+                                new FormLinkNullable<IKeywordGetter>(
+                                    Skyrim.Keyword.CraftingSmelter.FormKey
+                                );
+                        }
+
                         itemToFragmentCOBJ.CreatedObjectCount = (ushort?)
                             itemToFragmentCOBJ.Items.Count;
 

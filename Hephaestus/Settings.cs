@@ -65,6 +65,10 @@ namespace Hephaestus
         [SynthesisTooltip("Makes it so you need the schematic to temper items too")]
         public bool TemperReqSchematic { get; set; } = true;
 
+        [SynthesisSettingName("Use smelter to break down items")]
+        [SynthesisTooltip("Otherwise you'll get exp for every item breakdown")]
+        public bool useSmelter { get; set; } = true;
+
         [SynthesisSettingName("Blacklist items")]
         public List<IFormLinkGetter<IItemGetter>> itemBlacklist { get; set; } = new();
 
