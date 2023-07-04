@@ -1,8 +1,8 @@
 {
-  "Nickname": "Hephaestus",
-  "Visibility": "IncludeButHide",
-  "OneLineDescription": "Make crafting more 'fun' by requiring schematics and then putting those in loot!",
-  "LongDescription": "Makes every craftable lootable item require a schematic/recipe in your inventory before being able to craft them. The schematic/recipe shows up in the same places that the base item would (on NPCs, in shops, in chests) with a customizable drop chance.",
+  "Nickname": "Hephaestus - Crafting and Economy Overhaul",
+  "Visibility": "Visible",
+  "OneLineDescription": "Make crafting more immersive by requiring schematics to craft and temper items, and then putting those in loot!",
+  "LongDescription": "Make crafting more immersive by starting off with no* knowledge on how to craft items; instead requiring schematics (or recipes for food) which you can acquire from merchants, loot or breaking items down to get notes and then combining those into one.",
   "PreferredAutoVersioning": "Default",
   "RequiredMods": [],
   "TargetedReleases": [
