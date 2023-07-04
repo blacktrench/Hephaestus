@@ -29,6 +29,7 @@ namespace Hephaestus
             Dictionary<FormKey, List<FormKey>> itemCOBJs = new();
             Dictionary<FormKey, List<FormKey>> itemLVLIs = new();
             Dictionary<FormKey, FormKey> itemBOOK = new();
+            Dictionary<FormKey, FormKey> itemBOOKPlayer = new();
             Dictionary<FormKey, FormKey> itemBOOKFragment = new();
             Dictionary<FormKey, Dictionary<String, FormKey>> bookLVLIs = new();
 
@@ -67,6 +68,352 @@ namespace Hephaestus
                     new Model() { File = "Clutter/Books/Note04.nif" }
                 }
             };
+
+            // NPC name lists
+            List<string> NPCNames = new();
+
+            // Add customized names to pool
+            if (settings.LovedOnesName.Count != 0)
+            {
+                NPCNames = NPCNames.Concat(settings.LovedOnesName).ToList();
+            }
+
+            List<string> BlacksmithNPCNames =
+                new()
+                {
+                    // Vanilla NPCs
+                    "Adrianne Avenicci",
+                    "Alvor",
+                    "Arnskar Ember-Master",
+                    "Asbjorn Fire-Tamer",
+                    "Balimund",
+                    "Baldor Iron-Shaper",
+                    "Beirand",
+                    "Dushnamub",
+                    "Elrindir",
+                    "Eorlund Gray-Mane",
+                    "Filnjar",
+                    "Fihada",
+                    "Gharol",
+                    "Ghorza gra-Bagol",
+                    "Glover Mallory",
+                    "Gunmar",
+                    "Hestla",
+                    "Lod",
+                    "Moth gro-Bagol",
+                    "Oengul War-Anvil",
+                    "Rustleif",
+                    "Shuftharz",
+                    "Syndus",
+                    "Ulfberth War-Bear",
+                    "Vanryth Gatharian",
+                    "Garakh",
+                };
+
+            List<string> NordNPCNames =
+                new()
+                {
+                    // Nord
+                    "Bjorn",
+                    "Freya",
+                    "Leif",
+                    "Sigrid",
+                    "Erik",
+                    "Astrid",
+                    "Magnus",
+                    "Ingrid",
+                    "Gunnar",
+                    "Elsa",
+                    "Ragnar",
+                    "Kara",
+                    "Hakon",
+                    "Frida",
+                    "Sven",
+                    "Lena",
+                    "Jarl",
+                    "Helga",
+                    "Torvald",
+                    "Rosa",
+                    "Olaf",
+                    "Ida",
+                    "Ulfrik",
+                    "Solveig",
+                    "Harald",
+                    "Kirsten",
+                    "Yngvar",
+                    "Elin",
+                    "Sten",
+                    "Marta",
+                };
+
+            List<string> HumanNPCNames =
+                new()
+                {
+                    // Breton
+                    "Alain",
+                    "Eloise",
+                    "Gilbert",
+                    "Melisande",
+                    "Bertrand",
+                    "Cecile",
+                    "Henri",
+                    "Rosalie",
+                    "Damien",
+                    "Fleur",
+                    "Jules",
+                    "Sylvie",
+                    "Etienne",
+                    "Isabelle",
+                    "Laurent",
+                    "Viviane",
+                    "Gaston",
+                    "Juliette",
+                    "Marc",
+                    "Yvette",
+                    "Hugo",
+                    "Lucie",
+                    "Olivier",
+                    "Zoe",
+                    "Leon",
+                    "Margot",
+                    "Pierre",
+                    "Adele",
+                    "Remy",
+                    "Camille",
+                    // Imperial
+                    "Antonius",
+                    "Claudia",
+                    "Lucius",
+                    "Valeria",
+                    "Brutus",
+                    "Diana",
+                    "Marcus",
+                    "Aurelia",
+                    "Cassius",
+                    "Flavia",
+                    "Octavius",
+                    "Cornelia",
+                    "Decimus",
+                    "Julia",
+                    "Quintus",
+                    "Livia",
+                    "Felix",
+                    "Larissa",
+                    "Sergius",
+                    "Sabina",
+                    "Gaius",
+                    "Nerissa",
+                    "Titus",
+                    "Veronica",
+                    "Horatius",
+                    "Prisca",
+                    "Vitus",
+                    "Cynthia",
+                    "Lucianus",
+                    "Fabia",
+                    // Redguard
+                    "Cyrus",
+                    "Farah",
+                    "Malik",
+                    "Zara",
+                    "Alik",
+                    "Hana",
+                    "Rihad",
+                    "Laila",
+                    "Basim",
+                    "Jamila",
+                    "Sahan",
+                    "Nura",
+                    "Darius",
+                    "Nadia",
+                    "Tahir",
+                    "Rana",
+                    "Fares",
+                    "Samira",
+                    "Yasir",
+                    "Amira",
+                    "Hakim",
+                    "Leila",
+                    "Zayn",
+                    "Aisha",
+                    "Karim",
+                    "Nadya",
+                    "Jabari",
+                    "Zahra",
+                    "Omar",
+                    "Salma",
+                };
+
+            List<string> ElfNPCNames =
+                new()
+                {
+                    // Altmer
+                    "Calion",
+                    "Elenwen",
+                    "Farenir",
+                    "Tandilwe",
+                    "Andilir",
+                    "Galerion",
+                    "Ilenir",
+                    "Nalirelwe",
+                    "Carandil",
+                    "Heculoa",
+                    "Larethor",
+                    "Ondolemar",
+                    "Elandora",
+                    "Imedril",
+                    "Nalanya",
+                    "Rinyde",
+                    "Fasendil",
+                    "Lathenil",
+                    "Ohtesse",
+                    "Taranis",
+                    // Bosmer
+                    "Camoran",
+                    "Elara",
+                    "Fargoth",
+                    "Nara",
+                    "Anoriath",
+                    "Elsweyr",
+                    "Finoriell",
+                    "Niruin",
+                    "Aranias",
+                    "Eranas",
+                    "Gaenor",
+                    "Ondrevel",
+                    "Arthcamu",
+                    "Erthor",
+                    "Gilraen",
+                    "Sinderion",
+                    "Barenziah",
+                    "Faendal",
+                    "Glarthir",
+                    "Tharayya",
+                    // Dunmer
+                    "Adryn",
+                    "Dratha",
+                    "Neloth",
+                    "Voryn",
+                    "Almalexia",
+                    "Drelasa",
+                    "Nerevar",
+                    "Vivec",
+                    "Aryon",
+                    "Dren",
+                    "Nibani",
+                    "Zainab",
+                    "Baladas",
+                    "Drilu",
+                    "Nix-Hound",
+                    "Zanummu",
+                    "Barenziah",
+                    "Drinar",
+                    "Orvas",
+                    "Zekiel",
+                    "Brara",
+                    "Drovas",
+                    "Ralen",
+                    "Zula"
+                };
+
+            List<string> OrcNPCNames =
+                new()
+                {
+                    // Orc
+                    "Balagog",
+                    "Ghorza",
+                    "Kharag",
+                    "Shuftharz",
+                    "Bazrag",
+                    "Gortwog",
+                    "Kurog",
+                    "Urag",
+                    "Bolar",
+                    "Graufang",
+                    "Lazgara",
+                    "Urok",
+                    "Borgakh",
+                    "Gularzob",
+                    "Lob",
+                    "Ushug",
+                    "Bugak Gro-Dhalug",
+                    "Mauhulakh",
+                    "Yamarz",
+                    "Burguk Gro-Nagorm",
+                    "Mazoga",
+                    "Yashnag"
+                };
+
+            List<string> BeastNPCNames =
+                new()
+                {
+                    // Argonian
+                    "Deel-Jeen",
+                    "Jaree-Ra",
+                    "Scales-Like-Silver",
+                    "Veezara",
+                    "Derkeethus",
+                    "Jee-Lar",
+                    "Sees-All-Colors",
+                    "Vistha-Kai",
+                    "Eyes-of-Steel",
+                    "Jorunn",
+                    "Skald-King",
+                    "Shahvee",
+                    "Wamasu",
+                    "From-Deepest-Fathoms",
+                    "Keerava",
+                    "Shellback",
+                    "Xukas",
+                    "Geel-Lah",
+                    "Keshu",
+                    "Black-Fin",
+                    "Sings-With-Reed",
+                    "Zhasim",
+                    // Khajiit
+                    "Dar'jargo",
+                    "Ra'jirra",
+                    "S'rendarr",
+                    "Dar'Ma",
+                    "Jo'Ren-Dar",
+                    "Rajhin",
+                    "S'rashi",
+                    "Daro'Raaji",
+                    "Kharjo",
+                    "Rasha",
+                    "S'rathra",
+                    "Dro'Zira",
+                    "Khayla",
+                    "Razum-dar",
+                    "Shazah",
+                    "Dro'Zirr",
+                    "Khunzar-ri",
+                    "Ri'saad",
+                    "Shazgob",
+                    "Elsweyr",
+                    "Kiergo",
+                    "Ri'Zakar"
+                };
+
+            List<string> DwemerNPCNames =
+                new()
+                {
+                    "Bthuand",
+                    "Dhark",
+                    "Dumac",
+                    "Gharen",
+                    "Kagrenac",
+                    "Mzunchend",
+                    "Nchunak",
+                    "Rkungthunch",
+                    "Sthovin",
+                    "Yagrum",
+                    "Barenziah",
+                    "Dratha",
+                    "Lannessa",
+                    "Neransi",
+                    "Zula"
+                };
 
             Console.WriteLine(String.Empty);
             Console.WriteLine("=================================================");
@@ -138,7 +485,9 @@ namespace Hephaestus
                     !state.LinkCache.TryResolve<IItemGetter>(
                         createdItemFormKey,
                         out var createdItem
-                    ) || createdItem is not INamedGetter createdItemName
+                    )
+                    || createdItem is not INamedGetter createdItemName
+                    || createdItem is not IKeywordedGetter createdItemKeywords
                 )
                     continue;
 
@@ -170,6 +519,7 @@ namespace Hephaestus
 
                 // Book variables
                 Book book;
+                Book bookPlayer;
                 Book bookFragment;
 
                 // Randomize book model
@@ -192,15 +542,14 @@ namespace Hephaestus
                     continue;
 
                 // Initialize other
-                string? objBench = "Forge";
-                string? processName = "crafting";
-                string schematicType = "Schematic";
                 string? requiredItems = String.Empty;
                 string? aAn;
                 if (objName?.IndexOfAny(vowels) == 0)
-                    aAn = "an";
+                    aAn = "an ";
+                else if (createdItemFormKey == Skyrim.MiscItem.LeatherStrips.FormKey)
+                    aAn = "";
                 else
-                    aAn = "a";
+                    aAn = "a ";
 
                 // Assigning item types
                 switch (createdItem)
@@ -235,6 +584,7 @@ namespace Hephaestus
                         }
                         break;
                 }
+
                 if (settings.ShowDebugLogs)
                 {
                     Console.WriteLine(String.Empty);
@@ -258,9 +608,13 @@ namespace Hephaestus
                             e => e.BenchKeyword.FormKey == cobj.WorkbenchKeyword.FormKey
                         )
                     ];
-                    objBench = curBenchSettings.objBenchName ?? "crafting bench";
-                    processName = curBenchSettings.processName ?? "crafting";
-                    schematicType = curBenchSettings.schematicTypeName ?? "Schematic";
+                    string objBench = curBenchSettings.objBenchName ?? "crafting bench";
+                    string schematicType = curBenchSettings.schematicTypeName ?? "Schematic";
+                    string processName = curBenchSettings.processName ?? "craft";
+                    string processNameCont = $"{processName}";
+
+                    if (vowels.Any(e => e == processName[processName.Length - 1]))
+                        processNameCont = $"{processName.Substring(0, processName.Length - 1)}ing";
 
                     if (cobj.Items == null)
                         continue;
@@ -283,6 +637,94 @@ namespace Hephaestus
                         uint noteToSchematicRatio = (uint)
                             Math.Max(Math.Round(min + (max - min) * (float)random.NextDouble()), 1);
 
+                        // Name generation for schematic data
+                        if (createdItemKeywords.Keywords != null)
+                        {
+                            List<String> equipment =
+                                new() { "Armor", "Weapon", "Shield", "Jewelry" };
+
+                            // if it's equipment, generate based on races, otherwise don't
+                            if (equipment.Contains(objType))
+                            {
+                                if (
+                                    createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialElven
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.ArmorMaterialElvenGilded
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.ArmorMaterialElven
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialFalmer
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialFalmerHoned
+                                    )
+                                )
+                                {
+                                    NPCNames = ElfNPCNames;
+                                }
+                                else if (
+                                    createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialOrcish
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.ArmorMaterialOrcish
+                                    )
+                                )
+                                {
+                                    NPCNames = OrcNPCNames;
+                                }
+                                else if (
+                                    createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialDwarven
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.ArmorMaterialDwarven
+                                    )
+                                )
+                                {
+                                    NPCNames = DwemerNPCNames;
+                                }
+                                else if (
+                                    createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialDraugr
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.WeapMaterialDraugrHoned
+                                    )
+                                    || createdItemKeywords.Keywords.Contains(
+                                        Skyrim.Keyword.ArmorMaterialDwarven
+                                    )
+                                )
+                                {
+                                    NPCNames = NPCNames.Concat(NordNPCNames).ToList();
+                                }
+                                else
+                                {
+                                    NPCNames = NPCNames
+                                        .Concat(NordNPCNames)
+                                        .Concat(HumanNPCNames)
+                                        .Concat(BeastNPCNames)
+                                        .Concat(BlacksmithNPCNames)
+                                        .ToList();
+                                }
+                            }
+                            else
+                            {
+                                NPCNames = NPCNames
+                                    .Concat(NordNPCNames)
+                                    .Concat(HumanNPCNames)
+                                    .Concat(BeastNPCNames)
+                                    .Concat(ElfNPCNames)
+                                    .Concat(OrcNPCNames)
+                                    .Concat(DwemerNPCNames)
+                                    .ToList();
+                            }
+                        }
+
                         // create a new book
                         book = state.PatchMod.Books.AddNew(objEditorID);
 
@@ -290,7 +732,7 @@ namespace Hephaestus
                         book.EditorID = $"{objEditorID}_{schematicType}";
                         book.Name = $"{objType} {schematicType}: {objName}";
                         book.Description =
-                            $"A {schematicType.ToLower()} that provides guidance on crafting {aAn} {objName}. Without this, I won't be able to remember how to to do so anymore.";
+                            $"A {schematicType.ToLower()} created by {NPCNames[random.Next(NPCNames.Count)]}. It details the process of {processNameCont} {aAn}{objName}.";
                         book.Value = objValue * (noteToSchematicRatio + 2);
                         book.Weight = 0.25f;
                         book.Model = bookModelLib[bookModelSetKey];
@@ -307,111 +749,106 @@ namespace Hephaestus
                         List<string> flavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} looks like the notes of a madman, though I can somewhat decypher it. It seems to detail the process of {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} seems to have been teared off from someone's journal. It seems to explain the process of {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} goes into great detail on the steps of {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} contains the secrets to {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} is filled with scribbles and notes on the steps of {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} still has some stains of blood on it, it describes the process of {processName}ing {aAn} {objName} at a {objBench}."
+                                $"This {schematicType.ToLower()} looks like the notes of a madman, though I can somewhat decypher it. It seems to detail the process of {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} seems to have been teared off from someone's journal. It seems to explain the process of {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} goes into great detail on the steps of {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} contains the secrets to {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} is filled with scribbles and notes on the steps of {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} still has some stains of blood on it, it describes the process of {processNameCont} {aAn}{objName} at a {objBench}."
                             };
 
                         // Formatting book contents
                         List<string> ArmorflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} seems to have been written by a smith apprentice, from the looks of it it describes the process of {processName}ing {aAn} {objName} at a {objBench}.",
-                                $"This {schematicType.ToLower()} is a sketch, it seems to have been drawn by a designer. It shows the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
-                                $"This {schematicType.ToLower()} is a diary, it seems to have been written by a traveler. It narrates the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the experience and the wisdom of this piece of armor, I wonder what it has seen.",
-                                $"This {schematicType.ToLower()} is a prayer, it seems to have been uttered by a priest. It blesses the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the faith and the grace of this piece of armor, I wonder what it protects.",
-                                $"This {schematicType.ToLower()} is a sketch, it seems to have been drawn by a designer. It shows the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
-                                $"To create {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. The {objName} is a rare piece of armor that can be found only in certain places. The {processName}ing method involves using special skills and tools to create a complex and unique design.",
-                                $"This {schematicType.ToLower()} is a guide, it seems to have been written by a master. It instructs the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the skill and the expertise of this piece of armor, I wonder how it performs.",
-                                $"This {schematicType.ToLower()} is written as a riddle. It puzzles the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the mystery and the enigma of this piece of armor, I wonder what it hides.",
-                                $"This {schematicType.ToLower()} is a letter, it seems to have been sent by a friend. It shares the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the kindness and the generosity of this piece of armor, I wonder how it helps.",
-                                $"This {schematicType.ToLower()} is made up of vivid illustrations, it seems to have been created by an artist. It depicts the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the color and the expression of this piece of armor, I wonder how it inspires.",
+                                $"This {schematicType.ToLower()} seems to have been written by a smith apprentice, from the looks of it it describes how to {processName} {aAn}{objName} at a {objBench}.",
+                                $"This {schematicType.ToLower()} seems to have been drawn by a designer. It shows the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
+                                $"This {schematicType.ToLower()} seems to have been written by a traveler. It narrates the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the experience and the wisdom of this piece of armor, I wonder what it has seen.",
+                                $"This {schematicType.ToLower()} seems to have been uttered by a priest. It blesses the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the faith and the grace of this piece of armor, I wonder what it protects.",
+                                $"This {schematicType.ToLower()} seems to have been drawn by a designer. It shows the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the style and the flair of this piece of armor, I wonder how it looks.",
+                                $"To create {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. The {objName} is a rare piece of armor that can be found only in certain places. The {processNameCont} method involves using special skills and tools to create a complex and unique design.",
+                                $"This {schematicType.ToLower()} seems to have been written by a master. It instructs the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the skill and the expertise of this piece of armor, I wonder how it performs.",
+                                $"This {schematicType.ToLower()} is written as a riddle. It puzzles the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the mystery and the enigma of this piece of armor, I wonder what it hides.",
+                                $"This {schematicType.ToLower()} seems to have been created by an artist. It depicts the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the color and the expression of this piece of armor, I wonder how it inspires.",
                             };
 
                         // Formatting book contents
                         List<string> WeaponflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} is a rare find, it seems to belong to a famous craftsman. It reveals the secrets of {processName}ing {aAn} {objName} at a {objBench}. I can see the intricate details and the careful instructions that go into making such a masterpiece.",
-                                $"This {schematicType.ToLower()} is a bit hard to read, it looks like it was written in a hurry. It shows the basics of {processName}ing {aAn} {objName} at a {objBench}. I can tell that the writer was not very experienced or skilled, but they managed to create something useful.",
-                                $"This {schematicType.ToLower()} is a curious piece of paper, it seems to have some strange symbols and diagrams on it. It describes the process of {processName}ing {aAn} {objName} at a {objBench}. I can sense some magic and mystery behind this weapon, I wonder what it can do.",
-                                $"This {schematicType.ToLower()} is a valuable document, it seems to have been stolen from a royal vault. It explains the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the quality and the elegance of this weapon, I bet it belongs to someone important.",
-                                $"This {schematicType.ToLower()} is a worn-out parchment, it seems to have been passed down for generations. It tells the story of {processName}ing {aAn} {objName} at a {objBench}. I can feel the history and the legacy of this weapon, I wonder who wielded it before me.",
-                                $"This {schematicType.ToLower()} is a fresh piece of paper, it seems to have been written by someone who just learned the craft. It outlines the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the enthusiasm and the creativity of this weapon, I hope it works as intended.",
-                                $"This {schematicType.ToLower()} is a colorful drawing, it seems to have been made by a child. It illustrates the process of {processName}ing {aAn} {objName} at a {objBench}. I can see the imagination and the fun of this weapon, I wonder what inspired it.",
-                                $"This {schematicType.ToLower()} is a bloody mess, it seems to have been used as a weapon itself. It depicts the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the violence and the madness of this weapon, I hope it was worth it.",
-                                $"This {schematicType.ToLower()} is a faded scroll, it seems to have been hidden for a long time. It reveals the secrets of {processName}ing {aAn} {objName} at a {objBench}. I can see the wisdom and the knowledge of this weapon, I wonder what secrets it holds.",
-                                $"This {schematicType.ToLower()} is a neat printout, it seems to have been made by a professional. It shows the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the precision and the efficiency of this weapon, I admire the skill behind it.",
-                                $"This {schematicType.ToLower()} is a torn page, it seems to have been ripped from a book. It explains the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the complexity and the diversity of this weapon, I wonder how it works.",
-                                $"This {schematicType.ToLower()} is a handwritten note, it seems to have been left by a friend. It outlines the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the friendship and the care of this weapon, I appreciate the gesture.",
-                                $"This {schematicType.ToLower()} is a coded message, it seems to have been written by a spy. It conceals the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the stealth and the cunning of this weapon, I wonder who it was written for.",
-                                $"This {schematicType.ToLower()} is a burnt paper, it seems to have been salvaged from a fire. It preserves the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the damage and the danger of this weapon, I hope it is not too late.",
-                                $"This {schematicType.ToLower()} is a dirty rag, it seems to have been used as a wipe. It stains the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the dirt and the grime of this weapon, I hope it is still usable.",
-                                $"This {schematicType.ToLower()} is a golden plaque, it seems to have been awarded by a king. It honors the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the glory and the honor of this weapon, I wonder who earned it.",
-                                $"This {schematicType.ToLower()} is a crumpled paper, it seems to have been thrown away. It discards the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the failure and the frustration of this weapon, I wonder what went wrong.",
-                                $"This {schematicType.ToLower()} is a musical sheet, it seems to have been composed by a bard. It sings the steps of {processName}ing {aAn} {objName} at a {objBench}. I can hear the melody and the rhythm of this weapon, I wonder how it sounds.",
-                                $"This {schematicType.ToLower()} is a map, it seems to have been drawn by an explorer. It marks the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the adventure and the discovery of this weapon, I wonder where it leads.",
-                                $"This {schematicType.ToLower()} is a puzzle, it seems to have been made by a genius. It challenges the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the difficulty and the fun of this weapon, I wonder if I can solve it.",
-                                $"This {schematicType.ToLower()} is a poem, it seems to have been written by a lover. It praises the steps of {processName}ing {aAn} {objName} at a {objBench}. I can feel the emotion and the beauty of this weapon, I wonder who it is for.",
-                                $"This {schematicType.ToLower()} is a prophecy, it seems to have been spoken by a seer. It foretells the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the fate and the destiny of this weapon, I wonder what it means.",
-                                $"This {schematicType.ToLower()} is a joke, it seems to have been told by a jester. It mocks the steps of {processName}ing {aAn} {objName} at a {objBench}. I can see the humor and the irony of this weapon, I wonder if it is funny."
+                                $"This {schematicType.ToLower()} seems to belong to a famous craftsman. It reveals the secrets of {processNameCont} {aAn}{objName} at a {objBench}. I can see the intricate details and the careful instructions that go into making such a masterpiece.",
+                                $"This {schematicType.ToLower()} looks like it was written in a hurry. It shows the basics of {processNameCont} {aAn}{objName} at a {objBench}. I can tell that the writer was not very experienced or skilled, but they managed to create something useful.",
+                                $"This {schematicType.ToLower()} seems to have some strange symbols and diagrams on it. It describes the process of {processNameCont} {aAn}{objName} at a {objBench}. I can sense some magic and mystery behind this weapon, I wonder what it can do.",
+                                $"This {schematicType.ToLower()} seems to have been stolen from a royal vault. It explains the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the quality and the elegance of this weapon, I bet it belongs to someone important.",
+                                $"This {schematicType.ToLower()} seems to have been passed down for generations. It tells the story of {processNameCont} {aAn}{objName} at a {objBench}. I can feel the history and the legacy of this weapon, I wonder who wielded it before me.",
+                                $"This {schematicType.ToLower()} seems to have been written by someone who just learned the craft. It outlines the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the enthusiasm and the creativity of this weapon, I hope it works as intended.",
+                                $"This {schematicType.ToLower()} seems to have been made by a child. It illustrates the process of {processNameCont} {aAn}{objName} at a {objBench}. I can see the imagination and the fun of this weapon, I wonder what inspired it.",
+                                $"This {schematicType.ToLower()} seems to have been used as a weapon itself. It depicts the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the violence and the madness of this weapon, I hope it was worth it.",
+                                $"This {schematicType.ToLower()} seems to have been hidden for a long time. It reveals the secrets of {processNameCont} {aAn}{objName} at a {objBench}. I can see the wisdom and the knowledge of this weapon, I wonder what secrets it holds.",
+                                $"This {schematicType.ToLower()} seems to have been made by a professional. It shows the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the precision and the efficiency of this weapon, I admire the skill behind it.",
+                                $"This {schematicType.ToLower()} seems to have been ripped from a book. It explains the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the complexity and the diversity of this weapon, I wonder how it works.",
+                                $"This {schematicType.ToLower()} seems to have been written by a rogue. It conceals the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the stealth and the cunning of this weapon, I wonder who it was written for.",
+                                $"This {schematicType.ToLower()} seems to have been salvaged from a fire. It preserves the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the damage and the danger of this weapon, I hope it is not too late.",
+                                $"This {schematicType.ToLower()} seems to have been used as a wipe. It stains the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the dirt and the grime of this weapon, I hope it is still usable.",
+                                $"This {schematicType.ToLower()} seems to have been thrown away. It discards the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the failure and the frustration of this weapon, I wonder what went wrong.",
+                                $"This {schematicType.ToLower()} is a musical sheet, it seems to have been composed by a bard. It sings the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can hear the melody and the rhythm of this weapon, I wonder how it sounds.",
+                                $"This {schematicType.ToLower()} is a map, it seems to have been drawn by an explorer. It marks the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the adventure and the discovery of this weapon, I wonder where it leads.",
+                                $"This {schematicType.ToLower()} is a poem, it seems to have been written by a lover. It praises the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can feel the emotion and the beauty of this weapon, I wonder who it is for.",
+                                $"This {schematicType.ToLower()} is a joke, it seems to have been told by a jester. It mocks the steps of {processNameCont} {aAn}{objName} at a {objBench}. I can see the humor and the irony of this weapon, I wonder if it is funny."
                             };
 
                         // Formatting book contents
                         List<string> ShieldflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} reveals the secrets and arts of the craft, explaining the advanced steps to craft {aAn} {objName} using a {objBench}. This shield is a legendary item, only the worthy can obtain it. It requires mastering the {processName}ing technique to create an extraordinary and powerful design.",
-                                $"A soldier must have written this {schematicType.ToLower()}, it states the steps of {processName}ing {aAn} {objName} at a {objBench} with duty and loyalty. I wonder who this shield serves, it must be very reliable.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to make {aAn} {objName}. This shield is a common item, it can be used for various purposes. I will need to work with the available materials to create a simple and functional design, following the {processName}ing technique.",
-                                $"A traveler must have written this {schematicType.ToLower()}, it narrates the steps of {processName}ing {aAn} {objName} at a {objBench} with experience and wisdom. I wonder what this shield has seen, it must have been through many adventures.",
-                                $"A priest must have uttered this {schematicType.ToLower()}, it blesses the steps of {processName}ing {aAn} {objName} at a {objBench} with faith and grace. I wonder what this shield protects, it must be very sacred.",
-                                $"A Companion must have made this {schematicType.ToLower()}, it urges the steps of {processName}ing {aAn} {objName} at a {objBench} with courage. I wonder how this shield fights, it must be very brave.",
-                                $"A artist must have created this {schematicType.ToLower()}, it depicts the steps of {processName}ing {aAn} {objName} at a {objBench} with color and expression. I wonder how this shield inspires, it must be very beautiful.",
-                                $"A collector must have made this {schematicType.ToLower()}, it records the steps of {processName}ing {aAn} {objName} at a {objBench} with rarity and value. I wonder how this shield shines, it must be very precious.",
-                                $"A witch must have written this {schematicType.ToLower()}, it twists the steps of {processName}ing {aAn} {objName} at a {objBench} with evil and malice. I wonder how this shield hurts, it must be very dangerous."
+                                $"This {schematicType.ToLower()} reveals the secrets and arts of the craft, explaining the advanced steps to craft {aAn}{objName} using a {objBench}. This shield is a legendary item, only the worthy can obtain it. It requires mastering the {processNameCont} technique to create an extraordinary and powerful design.",
+                                $"A soldier must have written this {schematicType.ToLower()}, it states the steps of {processNameCont} {aAn}{objName} at a {objBench} with duty and loyalty. I wonder who this shield serves, it must be very reliable.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to make {aAn}{objName}. This shield is a common item, it can be used for various purposes. I will need to work with the available materials to create a simple and functional design, following the {processNameCont} technique.",
+                                $"A traveler must have written this {schematicType.ToLower()}, it narrates the steps of {processNameCont} {aAn}{objName} at a {objBench} with experience and wisdom. I wonder what this shield has seen, it must have been through many adventures.",
+                                $"A priest must have uttered this {schematicType.ToLower()}, it blesses the steps of {processNameCont} {aAn}{objName} at a {objBench} with faith and grace. I wonder what this shield protects, it must be very sacred.",
+                                $"A Companion must have made this {schematicType.ToLower()}, it urges the steps of {processNameCont} {aAn}{objName} at a {objBench} with courage. I wonder how this shield fights, it must be very brave.",
+                                $"A artist must have created this {schematicType.ToLower()}, it depicts the steps of {processNameCont} {aAn}{objName} at a {objBench} with color and expression. I wonder how this shield inspires, it must be very beautiful.",
+                                $"A collector must have made this {schematicType.ToLower()}, it records the steps of {processNameCont} {aAn}{objName} at a {objBench} with rarity and value. I wonder how this shield shines, it must be very precious.",
+                                $"A witch must have written this {schematicType.ToLower()}, it twists the steps of {processNameCont} {aAn}{objName} at a {objBench} with evil and malice. I wonder how this shield hurts, it must be very dangerous."
                             };
 
                         // Formatting book contents
                         List<string> CookingflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} must've been taken out of a cookbook, it lists the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} looks delicious, it must be very tasty. I can smell the aroma and the flavor of this dish, I can't wait to try it.",
-                                $"To prepare {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a traditional dish, it has been passed down for generations. I will need to use fresh ingredients and follow the {processName}ing method to make it. I can feel the warmth and the comfort of this dish, it reminds me of home.",
-                                $"This {schematicType.ToLower()} reveals the secrets of {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a exotic dish, it comes from a faraway land. I will need to master the skills and the tools to make it. I can see the spice and the zest of this dish, it makes me curious.",
-                                $"Someone must have left this {schematicType.ToLower()} on a table for a long time, it's quite stained. It outlines the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} looks simple, but it has a hidden twist. I can taste the sweetness and the sourness of this dish, it surprises me.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to cook {aAn} {objName}. This {objName} is a healthy dish, it is good for Ir body and mind. I will need to use organic ingredients and follow the {processName}ing technique to make it. I can feel the energy and the vitality of this dish, it makes me happy.",
-                                $"This {schematicType.ToLower()} teaches I how to {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a festive dish, it is perfect for celebrations and parties. I will need to use rich ingredients and follow the {processName}ing method to make it. I can hear the laughter and the joy of this dish, it makes me festive.",
-                                $"To {processName}ing {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a special dish, it is made with love and care. I will need to use quality ingredients and follow the {processName}ing technique to make it. I can feel the friendship and the generosity of this dish, it makes me grateful.",
-                                $"This {schematicType.ToLower()} reveals the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a ancient dish, it has a long history and tradition. I will need to use rare ingredients and master the {processName}ing technique to make it. I can see the wisdom and the knowledge of this dish, it makes me curious.",
-                                $"To {processName}ing {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a mysterious dish, it has a secret ingredient and a hidden effect. I will need to use unknown ingredients and follow the {processName}ing method to make it. I can taste the mystery and the magic of this dish, it makes me adventurous.",
-                                $"This {schematicType.ToLower()} tells I how to {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a personal dish, it is Ir own creation and invention. I will need to use Ir favorite ingredients and follow Ir own {processName}ing technique to make it. I can see the creativity and the expression of this dish, it makes me proud.",
-                                $"This {schematicType.ToLower()} shows me how to {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a delicious dish, it is good for any occasion. I will need to use fresh ingredients and follow the {processName}ing method to make it. I can smell the aroma and the flavor of this dish, it makes me hungry.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processName}ing {aAn} {objName}. This {objName} is a traditional dish, it has been passed down for generations. I will need to use authentic ingredients and follow the {processName}ing technique to make it. I can feel the warmth and the comfort of this dish, it reminds me of home.",
-                                $"This {schematicType.ToLower()} explains the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a exotic dish, it comes from a faraway land. I will need to master the skills and the tools to make it. I can see the spice and the zest of this dish, it makes me curious.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to cook {aAn} {objName}. This {objName} is a healthy dish, it is good for your body and mind. I will need to use organic ingredients and follow the {processName}ing technique to make it. I can feel the energy and the vitality of this dish, it makes me happy.",
-                                $"This {schematicType.ToLower()} instructs me how to {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a festive dish, it is perfect for celebrations and parties. I will need to use rich ingredients and follow the {processName}ing method to make it. I can hear the laughter and the joy of this dish, it makes me festive.",
+                                $"This {schematicType.ToLower()} must've been taken out of a cookbook, it lists the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} looks delicious, it must be very tasty. I can smell the aroma and the flavor of this dish, I can't wait to try it.",
+                                $"To prepare {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a traditional dish, it has been passed down for generations. I will need to use fresh ingredients and follow the {processNameCont} method to make it. I can feel the warmth and the comfort of this dish, it reminds me of home.",
+                                $"This {schematicType.ToLower()} reveals the secrets of {processNameCont} {aAn}{objName} using a {objBench}. This {objName} is a exotic dish, it comes from a faraway land. I will need to master the skills and the tools to make it. I can see the spice and the zest of this dish, it makes me curious.",
+                                $"Someone must have left this {schematicType.ToLower()} on a table for a long time, it's quite stained. It outlines the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} looks simple, but it has a hidden twist. I can taste the sweetness and the sourness of this dish, it surprises me.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to cook {aAn}{objName}. This {objName} is a healthy dish, it is good for Ir body and mind. I will need to use organic ingredients and follow the {processNameCont} technique to make it. I can feel the energy and the vitality of this dish, it makes me happy.",
+                                $"This {schematicType.ToLower()} teaches I how to {processName} {aAn}{objName} using a {objBench}. This {objName} is a festive dish, it is perfect for celebrations and parties. I will need to use rich ingredients and follow the {processNameCont} method to make it. I can hear the laughter and the joy of this dish, it makes me festive.",
+                                $"To {processNameCont} {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a special dish, it is made with love and care. I will need to use quality ingredients and follow the {processNameCont} technique to make it. I can feel the friendship and the generosity of this dish, it makes me grateful.",
+                                $"This {schematicType.ToLower()} reveals the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a ancient dish, it has a long history and tradition. I will need to use rare ingredients and master the {processNameCont} technique to make it. I can see the wisdom and the knowledge of this dish, it makes me curious.",
+                                $"To {processNameCont} {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a mysterious dish, it has a secret ingredient and a hidden effect. I will need to use unknown ingredients and follow the {processNameCont} method to make it. I can taste the mystery and the magic of this dish, it makes me adventurous.",
+                                $"This {schematicType.ToLower()} tells I how to {processName} {aAn}{objName} at a {objBench}. This {objName} is a personal dish, it is Ir own creation and invention. I will need to use Ir favorite ingredients and follow Ir own {processNameCont} technique to make it. I can see the creativity and the expression of this dish, it makes me proud.",
+                                $"This {schematicType.ToLower()} shows me how to {processName} {aAn}{objName} using a {objBench}. This {objName} is a delicious dish, it is good for any occasion. I will need to use fresh ingredients and follow the {processNameCont} method to make it. I can smell the aroma and the flavor of this dish, it makes me hungry.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processNameCont} {aAn}{objName}. This {objName} is a traditional dish, it has been passed down for generations. I will need to use authentic ingredients and follow the {processNameCont} technique to make it. I can feel the warmth and the comfort of this dish, it reminds me of home.",
+                                $"This {schematicType.ToLower()} explains the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a exotic dish, it comes from a faraway land. I will need to master the skills and the tools to make it. I can see the spice and the zest of this dish, it makes me curious.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to cook {aAn}{objName}. This {objName} is a healthy dish, it is good for your body and mind. I will need to use organic ingredients and follow the {processNameCont} technique to make it. I can feel the energy and the vitality of this dish, it makes me happy.",
+                                $"This {schematicType.ToLower()} instructs me how to {processName} {aAn}{objName} at a {objBench}. This {objName} is a festive dish, it is perfect for celebrations and parties. I will need to use rich ingredients and follow the {processNameCont} method to make it. I can hear the laughter and the joy of this dish, it makes me festive.",
                             };
 
                         // Formatting book contents
                         List<string> JewelryflavourText =
                             new()
                             {
-                                $"This {schematicType.ToLower()} shows me how to get started on {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a beautiful piece of jewelry, it is good for any occasion. I will need to use shiny materials and follow the {processName}ing method to make it. I can see the sparkle and the elegance of this piece, it makes me dazzled.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to get started on {processName}ing {aAn} {objName}. This {objName} is a rare piece of jewelry, it can only be found in certain places. I will need to use precious materials and follow the {processName}ing technique to make it. I can feel the value and the luxury of this piece, it makes me rich.",
-                                $"This {schematicType.ToLower()} explains the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a magical piece of jewelry, it has a special power and effect. I will need to master the skills and the tools to make it. I can see the magic and the mystery of this piece, it makes me curious.",
-                                $"This {schematicType.ToLower()} contains the instructions on {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a special piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processName}ing method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
-                                $"This {schematicType.ToLower()} teaches me the way of {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a ancient piece of jewelry, it has a long history and tradition. I will need to use rare materials and master the {processName}ing technique to make it. I can see the wisdom and the knowledge of this piece, it makes me curious.",
-                                $"To get started on {processName}ing {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a exotic piece of jewelry, it comes from a faraway land. I will need to use unique materials and follow the {processName}ing method to make it. I can see the spice and the zest of this piece, it makes me adventurous.",
-                                $"This {schematicType.ToLower()} reveals the secrets of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a legendary piece of jewelry, only the worthy can obtain it. I will need to use special materials and master the secrets and arts of the craft to make it. I can see the glory and the honor of this piece, it makes me proud.",
-                                $"To craft {aAn} {objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a simple piece of jewelry, but it has a hidden twist. I will need to use common materials and follow the {processName}ing technique to make it. I can taste the sweetness and the sourness of this piece, it surprises me.",
-                                $"This {schematicType.ToLower()} tells me the way of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a elegant piece of jewelry, it is perfect for celebrations and parties. I will need to use shiny materials and follow the {processName}ing method to make it. I can hear the laughter and the joy of this piece, it makes me festive.",
-                                $"This {schematicType.ToLower()} shows me how to get started on {processName}ing {aAn} {objName} using a {objBench}. This {objName} is a colorful piece of jewelry, it is good for any occasion. I will need to use bright materials and follow the {processName}ing method to make it. I can see the sparkle and the flair of this piece, it makes me dazzled.",
-                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processName}ing {aAn} {objName}. This {objName} is a mysterious piece of jewelry, it has a secret ingredient and a hidden effect. I will need to use unknown materials and follow the {processName}ing technique to make it. I can taste the mystery and the magic of this piece, it makes me curious.",
-                                $"This {schematicType.ToLower()} explains the steps of {processName}ing {aAn} {objName} at a {objBench}. This {objName} is a beautiful piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processName}ing method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
+                                $"This {schematicType.ToLower()} shows me how to get started on {processNameCont} {aAn}{objName} using a {objBench}. This {objName} is a beautiful piece of jewelry, it is good for any occasion. I will need to use shiny materials and follow the {processNameCont} method to make it. I can see the sparkle and the elegance of this piece, it makes me dazzled.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to get started on {processNameCont} {aAn}{objName}. This {objName} is a rare piece of jewelry, it can only be found in certain places. I will need to use precious materials and follow the {processNameCont} technique to make it. I can feel the value and the luxury of this piece, it makes me rich.",
+                                $"This {schematicType.ToLower()} explains the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a magical piece of jewelry, it has a special power and effect. I will need to master the skills and the tools to make it. I can see the magic and the mystery of this piece, it makes me curious.",
+                                $"This {schematicType.ToLower()} contains the instructions on {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a special piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processNameCont} method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
+                                $"This {schematicType.ToLower()} teaches me the way of {processNameCont} {aAn}{objName} using a {objBench}. This {objName} is a ancient piece of jewelry, it has a long history and tradition. I will need to use rare materials and master the {processNameCont} technique to make it. I can see the wisdom and the knowledge of this piece, it makes me curious.",
+                                $"To get started on {processNameCont} {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a exotic piece of jewelry, it comes from a faraway land. I will need to use unique materials and follow the {processNameCont} method to make it. I can see the spice and the zest of this piece, it makes me adventurous.",
+                                $"This {schematicType.ToLower()} reveals the secrets of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a legendary piece of jewelry, only the worthy can obtain it. I will need to use special materials and master the secrets and arts of the craft to make it. I can see the glory and the honor of this piece, it makes me proud.",
+                                $"To craft {aAn}{objName}, I will need this {schematicType.ToLower()} and access to a {objBench}. This {objName} is a simple piece of jewelry, but it has a hidden twist. I will need to use common materials and follow the {processNameCont} technique to make it. I can taste the sweetness and the sourness of this piece, it surprises me.",
+                                $"This {schematicType.ToLower()} tells me the way of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a elegant piece of jewelry, it is perfect for celebrations and parties. I will need to use shiny materials and follow the {processNameCont} method to make it. I can hear the laughter and the joy of this piece, it makes me festive.",
+                                $"This {schematicType.ToLower()} shows me how to get started on {processNameCont} {aAn}{objName} using a {objBench}. This {objName} is a colorful piece of jewelry, it is good for any occasion. I will need to use bright materials and follow the {processNameCont} method to make it. I can see the sparkle and the flair of this piece, it makes me dazzled.",
+                                $"I will need this {schematicType.ToLower()} and access to a {objBench} to {processNameCont} {aAn}{objName}. This {objName} is a mysterious piece of jewelry, it has a secret ingredient and a hidden effect. I will need to use unknown materials and follow the {processNameCont} technique to make it. I can taste the mystery and the magic of this piece, it makes me curious.",
+                                $"This {schematicType.ToLower()} explains the steps of {processNameCont} {aAn}{objName} at a {objBench}. This {objName} is a beautiful piece of jewelry, it is made with love and care. I will need to use quality materials and follow the {processNameCont} method to make it. I can feel the friendship and the generosity of this piece, it makes me grateful.",
                             };
 
                         switch (objType)
@@ -459,7 +896,7 @@ namespace Hephaestus
                         }
 
                         book.BookText =
-                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n{requiredItems}\n<font face='$HandwrittenFont'>{flavourText[random.Next(flavourText.Count)]} {otherConditions}</font>";
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourText[random.Next(flavourText.Count)]} {otherConditions}</font>";
                         ;
 
                         // Add book to dict
@@ -474,27 +911,63 @@ namespace Hephaestus
                             Console.WriteLine(String.Empty);
                         }
 
+                        // Add player made schematic
+
+                        // create a new book
+                        bookPlayer = state.PatchMod.Books.AddNew(objEditorID);
+
+                        // Set the book properties
+                        bookPlayer.EditorID = $"{book.EditorID}_Player";
+                        bookPlayer.Name = book.Name;
+                        bookPlayer.Description =
+                            $"A {schematicType.ToLower()} created by me. It details the process of {processNameCont} {aAn}{objName}.";
+                        ;
+                        bookPlayer.Value = book.Value;
+                        bookPlayer.Weight = book.Weight;
+                        bookPlayer.Model = book.Model;
+                        bookPlayer.InventoryArt = book.InventoryArt;
+                        bookPlayer.ObjectBounds = book.ObjectBounds;
+                        bookPlayer.Type = book.Type;
+                        bookPlayer.PickUpSound = book.PickUpSound;
+                        bookPlayer.Keywords = book.Keywords;
+
+                        // Formatting book contents
+                        List<string> flavourTextPlayer =
+                            new()
+                            {
+                                $"I spent quite some time on this {schematicType.ToLower()}. The writing is rough, the steps somewhat confusing, but it's easy enough to follow it and {processName} {aAn}{objName} at a {objBench}.",
+                                $"I wrote this {schematicType.ToLower()} with great detail. It details the steps of {processNameCont} {aAn}{objName} at a {objBench}.",
+                                $"Coming up with this {schematicType.ToLower()} took a lot of practice, you can see it from the scribbles and notes. They describe the steps of {processNameCont} {aAn}{objName} at a {objBench}.",
+                            };
+
+                        bookPlayer.BookText =
+                            $"{frontPage}\n<p align='left'>\nMaterials needed:\n<b>{requiredItems}</b>\n<font face='$HandwrittenFont'>{flavourTextPlayer[random.Next(flavourTextPlayer.Count)]} {otherConditions}</font>";
+                        ;
+
+                        // Add book to dict
+                        itemBOOKPlayer.Add(createdItem.FormKey, bookPlayer.FormKey);
+
                         // create a new book fragment
                         bookFragment = state.PatchMod.Books.AddNew(book.EditorID);
-                        string? counter = "a couple";
+                        string? counter = "a couple times";
                         switch (noteToSchematicRatio)
                         {
                             case (<= 6):
-                                counter = "a small amount";
+                                counter = "multiple times";
                                 break;
                             case (<= 8):
                                 counter = "a fair amount";
                                 break;
                             case (<= 10):
-                                counter = "a larger amount";
+                                counter = "quite a fair amount";
                                 break;
                         }
 
                         // Set the fragment properties
-                        bookFragment.EditorID = $"{objEditorID}_{schematicType}_Fragment";
+                        bookFragment.EditorID = $"{book.EditorID}_Fragment";
                         bookFragment.Name = $"{schematicType} notes on {objName}";
                         bookFragment.Description =
-                            $"Notes I made on the {processName}ing of {aAn} {objName}. Maybe if I collect {counter} of these I can then write up my own {schematicType.ToLower()}.";
+                            $"Notes made on the {processNameCont} of {aAn}{objName}.";
                         bookFragment.Value = (uint)(
                             Math.Max(Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)), 1)
                         );
@@ -508,13 +981,10 @@ namespace Hephaestus
                             Skyrim.SoundDescriptor.ITMNoteUp.FormKey
                         );
                         bookFragment.BookText =
-                            $"After breaking down {aAn} {objName} I feel like I've grown closer to understanding how to {processName} it. I should study more of these if I want to be able to craft {aAn} {objName} of my own.";
+                            $"After studying {aAn}{objName} I feel like I've grown closer to understanding how to {processName} it. I will need to repeat this process {counter} if I want to be able to {processName} {aAn}{objName} of my own.";
                         ;
                         bookFragment.Type = Book.BookType.BookOrTome;
-                        bookFragment.Keywords = new Noggog.ExtendedList<
-                            IFormLinkGetter<IKeywordGetter>
-                        >();
-                        bookFragment.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
+                        bookFragment.Keywords = book.Keywords;
 
                         // Add book fragment to dict
                         itemBOOKFragment.Add(createdItem.FormKey, bookFragment.FormKey);
@@ -571,7 +1041,7 @@ namespace Hephaestus
 
                         bookCOBJ.EditorID = $"{objEditorID}_{schematicType}_Recipe";
                         bookCOBJ.CreatedObject = new FormLinkNullable<IConstructibleGetter>(
-                            book.FormKey
+                            bookPlayer.FormKey
                         );
 
                         bookCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>();
@@ -629,40 +1099,25 @@ namespace Hephaestus
                                 itemBOOK[createdItemFormKey],
                                 out var bookLink
                             )
+                            || !state.LinkCache.TryResolve<IBookGetter>(
+                                itemBOOKPlayer[createdItemFormKey],
+                                out var bookPlayerLink
+                            )
                         )
                             continue;
 
-                        if (bookLink is not Book BookLinkBook)
+                        if (
+                            (bookLink is not Book BookLinkBook)
+                            || (bookPlayerLink is not Book BookPlayerLinkBook)
+                        )
                             continue;
 
                         book = BookLinkBook;
+                        bookPlayer = BookPlayerLinkBook;
                     }
 
                     // Create a new COBJ record with the modified conditions
-                    var modifiedCobj = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
-                    var newCond = new GetItemCountConditionData()
-                    {
-                        RunOnType = Condition.RunOnType.Reference,
-                        Reference = Skyrim.PlayerRef,
-                    };
-                    newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
-                        newCond,
-                        book.FormKey
-                    );
-                    newCond.ItemOrList.Link.SetTo(book);
-
-                    modifiedCobj.Conditions.Add(
-                        new ConditionFloat()
-                        {
-                            ComparisonValue = 1,
-                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                            Data = newCond,
-                            Flags = Condition.Flag.OR
-                        }
-                    );
-
-                    if (settings.ShowDebugLogs)
-                        Console.WriteLine($"    Patched {cobj.EditorID} with {book.EditorID}");
+                    var modifiedCOBJ = state.PatchMod.ConstructibleObjects.GetOrAddAsOverride(cobj);
 
                     // Blacksmith tutorial workaround
 
@@ -684,7 +1139,8 @@ namespace Hephaestus
                         {
                             ComparisonValue = 10,
                             CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                            Data = SmithTutorialCond
+                            Data = SmithTutorialCond,
+                            Flags = Condition.Flag.OR
                         };
 
                         if (
@@ -707,11 +1163,56 @@ namespace Hephaestus
                             conditionBase.ComparisonValue = 70;
                         }
 
-                        modifiedCobj.Conditions.Add(conditionBase);
+                        modifiedCOBJ.Conditions.Add(conditionBase);
                     }
+
+                    // Add book conditions
+                    var bookCond = new GetItemCountConditionData()
+                    {
+                        RunOnType = Condition.RunOnType.Reference,
+                        Reference = Skyrim.PlayerRef,
+                    };
+                    bookCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                        bookCond,
+                        book.FormKey
+                    );
+                    bookCond.ItemOrList.Link.SetTo(book);
+
+                    var bookCondPlayer = new GetItemCountConditionData()
+                    {
+                        RunOnType = Condition.RunOnType.Reference,
+                        Reference = Skyrim.PlayerRef,
+                    };
+                    bookCondPlayer.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                        bookCondPlayer,
+                        bookPlayer.FormKey
+                    );
+                    bookCondPlayer.ItemOrList.Link.SetTo(bookPlayer);
+
+                    modifiedCOBJ.Conditions.Add(
+                        new ConditionFloat()
+                        {
+                            ComparisonValue = 1,
+                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                            Data = bookCond,
+                            Flags = Condition.Flag.OR
+                        }
+                    );
+
+                    modifiedCOBJ.Conditions.Add(
+                        new ConditionFloat()
+                        {
+                            ComparisonValue = 1,
+                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                            Data = bookCondPlayer,
+                        }
+                    );
+
+                    if (settings.ShowDebugLogs)
+                        Console.WriteLine($"    Patched {cobj.EditorID} with {book.EditorID}");
                 }
 
-                // Disabling since for some reason conditions don't work on tempering cobjs?
+                // Make tempered COBJs also require schematics
                 if (settings.TemperReqSchematic)
                 {
                     foreach (
@@ -741,16 +1242,16 @@ namespace Hephaestus
                         }
 
                         // Set up condition
-                        var newCond = new GetItemCountConditionData()
+                        var bookCond = new GetItemCountConditionData()
                         {
                             RunOnType = Condition.RunOnType.Reference,
                             Reference = Skyrim.PlayerRef,
                         };
-                        newCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
-                            newCond,
+                        bookCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            bookCond,
                             itemBOOK[createdItemFormKey]
                         );
-                        newCond.ItemOrList.Link.SetTo(itemBOOK[createdItemFormKey]);
+                        bookCond.ItemOrList.Link.SetTo(itemBOOK[createdItemFormKey]);
 
                         // add condition
                         var modifiedTemperCOBJ =
@@ -797,7 +1298,29 @@ namespace Hephaestus
                             {
                                 ComparisonValue = 1,
                                 CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                                Data = newCond
+                                Data = bookCond,
+                                Flags = Condition.Flag.OR
+                            }
+                        );
+
+                        // Add player book as cond
+                        var bookCondPlayer = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        bookCondPlayer.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            bookCondPlayer,
+                            itemBOOKPlayer[createdItemFormKey]
+                        );
+                        bookCondPlayer.ItemOrList.Link.SetTo(itemBOOKPlayer[createdItemFormKey]);
+
+                        modifiedTemperCOBJ.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = 1,
+                                CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                                Data = bookCondPlayer,
                             }
                         );
                     }
@@ -835,7 +1358,7 @@ namespace Hephaestus
                         }
                     };
 
-                    string leveledItemIDTemplate = $"{objEditorID}_{schematicType}";
+                    string leveledItemIDTemplate = $"{objEditorID}_Schematic_Entry";
 
                     if (!bookLVLIs.ContainsKey(itemBOOK[createdItemFormKey]))
                         bookLVLIs.Add(

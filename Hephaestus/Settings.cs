@@ -36,7 +36,7 @@ namespace Hephaestus
                 {
                     BenchKeyword = Skyrim.Keyword.CraftingSmithingForge,
                     objBenchName = "Forge",
-                    processName = "smelt",
+                    processName = "shape",
                     schematicTypeName = "Schematic"
                 },
                 new BaseSettings()
@@ -67,6 +67,15 @@ namespace Hephaestus
 
         [SynthesisSettingName("Blacklist items")]
         public List<IFormLinkGetter<IItemGetter>> itemBlacklist { get; set; } = new();
+
+        [SynthesisSettingName("Add names to pool of crafters")]
+        [SynthesisDescription(
+            "Any name added here is added to the pool of names that get used when generating the looted schematics"
+        )]
+        [SynthesisTooltip(
+            "Any name added here is added to the pool of names that get used when generating the looted schematics"
+        )]
+        public List<String> LovedOnesName { get; set; } = new();
 
         [SynthesisSettingName("(Debug) Show patched item info")]
         public bool ShowDebugLogs { get; set; } = true;
