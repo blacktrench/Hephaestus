@@ -734,7 +734,7 @@ namespace Hephaestus
                             }
                         }
                         // create a new book
-                        book = state.PatchMod.Books.AddNew($"{objEditorID}_{schematicType}");
+                        book = state.PatchMod.Books.AddNew();
 
                         // Set the book properties
                         book.EditorID = $"{objEditorID}_{schematicType}";
@@ -922,7 +922,7 @@ namespace Hephaestus
                         // Add player made schematic
 
                         // create a new book
-                        bookPlayer = state.PatchMod.Books.AddNew($"{book.EditorID}_Player");
+                        bookPlayer = state.PatchMod.Books.AddNew();
 
                         // Set the book properties
                         bookPlayer.EditorID = $"{book.EditorID}_Player";
@@ -956,7 +956,7 @@ namespace Hephaestus
                         itemBOOKPlayer.Add(createdItem.FormKey, bookPlayer.FormKey);
 
                         // create a new book fragment
-                        bookFragment = state.PatchMod.Books.AddNew($"{book.EditorID}_Fragment");
+                        bookFragment = state.PatchMod.Books.AddNew();
                         string counter = $"about {noteToSchematicRatio} times";
 
                         // Set the fragment properties
