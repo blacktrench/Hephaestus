@@ -72,6 +72,26 @@ namespace Hephaestus
         [SynthesisSettingName("Blacklist items")]
         public List<IFormLinkGetter<IItemGetter>> itemBlacklist { get; set; } = new();
 
+        [SynthesisSettingName("Add schematics to merchants?")]
+        public bool distributeVendors { get; set; } = true;
+
+        [SynthesisSettingName("Add schematics to blacksmiths?")]
+        public bool distributeBlacksmiths { get; set; } = true;
+
+        [SynthesisSettingName(
+            "Add schematics to special loot (special chests, boss chests, etc.)?"
+        )]
+        public bool distributeSpecial { get; set; } = true;
+
+        [SynthesisSettingName("Add schematics to general loot?")]
+        public bool distributeGeneralLoot { get; set; } = true;
+
+        [SynthesisSettingName("Add custom lists to distribute schematics to")]
+        [SynthesisTooltip(
+            "Keep in mind that any leveled list that is used as an outfit by NPCs may cause issues with some instances of said NPCs being naked."
+        )]
+        public List<IFormLinkGetter<ILeveledItemGetter>> LVLIWhitelist { get; set; } = new();
+
         [SynthesisSettingName("Add names to pool of crafters")]
         [SynthesisDescription(
             "Any name added here is added to the pool of names that get used when generating the looted schematics"

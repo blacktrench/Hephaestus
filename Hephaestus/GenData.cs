@@ -488,5 +488,136 @@ namespace Hephaestus
                 new Model() { File = "Clutter/Books/Note04.nif" }
             }
         };
+
+        public static List<FormKey> lootLVLIWhitelistBase =
+            new()
+            {
+                Skyrim.LeveledItem.LItemLeatherAndStrips75.FormKey,
+                Skyrim.LeveledItem.CWBearArmorPlayerReward.FormKey,
+            };
+
+        public static List<FormKey> lootLVLIWhitelistBlacksmith =
+            new()
+            {
+                Skyrim.LeveledItem.LItemArmorBootsHeavyBlacksmith.FormKey,
+                Skyrim.LeveledItem.LitemArmorBootsLightBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassHeavyBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassLightBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsHeavyBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsLightBlacksmith.FormKey,
+                Skyrim.LeveledItem.LitemArmorShieldHeavyBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldLightBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldLightBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponBowBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchBlacksmithBow75.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponMaceBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponSwordBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponDaggerBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponDaggerBlacksmith15.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponWarAxeBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponBattleaxeBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponWarhammerBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemEnchWeaponGreatswordBlacksmith.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinBattleaxe.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinBootsHeavy.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinBootsLight.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinBow.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinCuirassHeavy.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinCuirassLight.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinDagger.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinGauntletsHeavy.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinGauntletsLight.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinGreatsword.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinHelmetHeavy.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinHelmetLight.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinMace.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinShieldHeavy.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinShieldLight.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinSword.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinWaraxe.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinWaraxe.FormKey,
+                Skyrim.LeveledItem.LItemBlacksmithMinWarhammer.FormKey,
+                Dragonborn.LeveledItem.DLC2BlacksmithArmorExtra100.FormKey,
+                Dragonborn.LeveledItem.DLC2BlacksmithArmorExtra75.FormKey,
+                Dragonborn.LeveledItem.DLC2BlacksmithArmorStalhrim75.FormKey,
+                Dragonborn.LeveledItem.DLC2BlacksmithNordicWeapon75.FormKey,
+                Dragonborn.LeveledItem.DLC2BlackSmithStalhrimWeapon75.FormKey,
+            };
+
+        public static List<FormKey> lootLVLIWhitelistLoot =
+            new()
+            {
+                Skyrim.LeveledItem.LItemClothesAll.FormKey,
+                Skyrim.LeveledItem.LItemClothesWork.FormKey,
+                Skyrim.LeveledItem.LItemClothesRegular.FormKey,
+                Skyrim.LeveledItem.LItemClothesFarmAll.FormKey,
+                Skyrim.LeveledItem.LootDwarvenOre10.FormKey,
+                Skyrim.LeveledItem.LootFalmerOre10.FormKey,
+                Skyrim.LeveledItem.LootFalmerOre25.FormKey,
+                Skyrim.LeveledItem.LootFalmerOre100.FormKey,
+                Skyrim.LeveledItem.LootWarlockGems15.FormKey,
+                Skyrim.LeveledItem.LootBanditGems100.FormKey,
+                Skyrim.LeveledItem.LootForswornFood10.FormKey,
+                Skyrim.LeveledItem.LootForswornIngots100.FormKey,
+            };
+
+        public static List<FormKey> lootLVLIWhitelistVendor =
+            new()
+            {
+                Skyrim.LeveledItem.LItemMiscVendorMineralsProcessed25.FormKey,
+                Skyrim.LeveledItem.LItemMiscVendorMineralsRaw50.FormKey,
+                Skyrim.LeveledItem.LItemMiscVendorMiscItems75.FormKey,
+                Skyrim.LeveledItem.LItemWeaponBowTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponMaceTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponSwordTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponDaggerTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponWarAxeTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorBootsHeavyTown.FormKey,
+                Skyrim.LeveledItem.LitemArmorBootsLightTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponBattleAxeTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponWarhammerTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorHelmetHeavyTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorHelmetLightTown.FormKey,
+                Skyrim.LeveledItem.LitemArmorShieldHeavyTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldLightTown.FormKey,
+                Skyrim.LeveledItem.LItemWeaponGreatSwordTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassHeavyTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassLightTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsHeavyTown.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsLightTown.FormKey,
+                Skyrim.LeveledItem.LItemFoodInnCommon.FormKey,
+                Skyrim.LeveledItem.LootDrinkList25.FormKey,
+                Dragonborn.LeveledItem.DLC2LItemIngredientFoodPrepared.FormKey
+            };
+
+        public static List<FormKey> lootLVLIWhitelistSpecial =
+            new()
+            {
+                Skyrim.LeveledItem.LItemArmorBootsHeavySpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorBootsLightSpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassHeavySpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorCuirassLightSpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsHeavySpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorGauntletsLightSpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldHeavySpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldLightSpecial.FormKey,
+                Skyrim.LeveledItem.LItemArmorShieldLightSpecial.FormKey,
+                Skyrim.LeveledItem.LootBanditChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootBanditChestBossMagicItem25.FormKey,
+                Skyrim.LeveledItem.LootBanditChestBossMagicItem100.FormKey,
+                Skyrim.LeveledItem.LootCWSonsChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootCWImperialsChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootDraugrChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootDraugrChestBossMagicItem25.FormKey,
+                Skyrim.LeveledItem.LootFalmerChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootDwarvenChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootVampireChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootWarlockChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootWarlockChestBossMagicItem25.FormKey,
+                Skyrim.LeveledItem.LootForswornChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootHagravenChestBossBase.FormKey,
+                Skyrim.LeveledItem.LootWerewolfChestBossBase.FormKey,
+                Skyrim.LeveledItem.LItemLootIMineralsProcessed.FormKey,
+            };
     }
 }

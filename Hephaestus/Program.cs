@@ -39,22 +39,25 @@ namespace Hephaestus
             Dictionary<FormKey, FormKey> itemBOOK = new();
             Dictionary<FormKey, FormKey> itemBOOKPlayer = new();
             Dictionary<FormKey, FormKey> itemBOOKFragment = new();
-            Dictionary<FormKey, Dictionary<String, FormKey>> bookLVLIs = new();
+            Dictionary<FormKey, Dictionary<string, FormKey>> bookLVLIs = new();
 
-            // NPC name lists
-            List<string> NPCNames = new();
+            // LVLI Whitelist base
+            List<FormKey> lootLVLIWhitelist = new();
+            lootLVLIWhitelist.AddRange(GenData.lootLVLIWhitelistBase);
+            if (settings.distributeVendors)
+                lootLVLIWhitelist.AddRange(GenData.lootLVLIWhitelistVendor);
+            if (settings.distributeGeneralLoot)
+                lootLVLIWhitelist.AddRange(GenData.lootLVLIWhitelistLoot);
+            if (settings.distributeBlacksmiths)
+                lootLVLIWhitelist.AddRange(GenData.lootLVLIWhitelistBlacksmith);
+            if (settings.distributeSpecial)
+                lootLVLIWhitelist.AddRange(GenData.lootLVLIWhitelistSpecial);
 
-            // Add customized names to pool
-            if (settings.LovedOnesName.Count != 0)
-            {
-                NPCNames = NPCNames.Concat(settings.LovedOnesName).ToList();
-            }
-
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
             Console.WriteLine("=================================================");
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
             Console.WriteLine("Building cache ...");
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
 
             // Enumerate through COBJs and save the data for later for the items that have names and values, for which the COBJ has a whitelisted keyword and which are present in at least one leveled list
             foreach (
@@ -110,9 +113,9 @@ namespace Hephaestus
                 itemCOBJs[createdItem.FormKey].Add(baseCOBJ.FormKey);
             }
 
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
             Console.WriteLine("=================================================");
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
             Console.WriteLine("Assigning item types and prepping things ...");
 
             foreach (var createdItemFormKey in itemCOBJs.Keys)
@@ -129,9 +132,9 @@ namespace Hephaestus
 
                 if (settings.ShowDebugLogs)
                 {
-                    Console.WriteLine(String.Empty);
+                    Console.WriteLine(string.Empty);
                     Console.WriteLine("=======================");
-                    Console.WriteLine(String.Empty);
+                    Console.WriteLine(string.Empty);
                     Console.WriteLine($"Found {createdItemName.Name} ...");
                 }
                 else
@@ -193,7 +196,7 @@ namespace Hephaestus
                     continue;
 
                 // Initialize other
-                string? requiredItems = String.Empty;
+                string? requiredItems = string.Empty;
                 string? aAn;
                 if (objName?.IndexOfAny(vowels) == 0)
                     aAn = "an ";
@@ -244,7 +247,7 @@ namespace Hephaestus
 
                 if (settings.ShowDebugLogs)
                 {
-                    Console.WriteLine(String.Empty);
+                    Console.WriteLine(string.Empty);
                     Console.WriteLine($"Creating {objName} schematics and patching COBJs ...");
                 }
 
@@ -293,10 +296,13 @@ namespace Hephaestus
                         uint noteToSchematicRatio = (uint)
                             Math.Max(Math.Round(min + (max - min) * (float)random.NextDouble()), 1);
 
+                        // NPC name lists
+                        List<string> NPCNames = settings.LovedOnesName;
+
                         // Name generation for schematic data
                         if (createdItemKeywords.Keywords != null)
                         {
-                            List<String> equipment =
+                            List<string> equipment =
                                 new() { "Armor", "Weapon", "Shield", "Jewelry" };
 
                             // if it's equipment, generate based on races, otherwise don't
@@ -320,7 +326,7 @@ namespace Hephaestus
                                         .Contains(Skyrim.Keyword.WeapMaterialFalmerHoned)
                                 )
                                 {
-                                    NPCNames = GenData.ElfNPCNames;
+                                    NPCNames.AddRange(GenData.ElfNPCNames);
                                 }
                                 else if (
                                     createdItemKeywords
@@ -356,28 +362,24 @@ namespace Hephaestus
                                         .Contains(Skyrim.Keyword.ArmorMaterialDwarven)
                                 )
                                 {
-                                    NPCNames = NPCNames.Concat(GenData.NordNPCNames).ToList();
+                                    NPCNames.AddRange(GenData.NordNPCNames);
                                 }
                                 else
                                 {
-                                    NPCNames = NPCNames
-                                        .Concat(GenData.NordNPCNames)
-                                        .Concat(GenData.HumanNPCNames)
-                                        .Concat(GenData.BeastNPCNames)
-                                        .Concat(GenData.BlacksmithNPCNames)
-                                        .ToList();
+                                    NPCNames.AddRange(GenData.NordNPCNames);
+                                    NPCNames.AddRange(GenData.HumanNPCNames);
+                                    NPCNames.AddRange(GenData.BeastNPCNames);
+                                    NPCNames.AddRange(GenData.BlacksmithNPCNames);
                                 }
                             }
                             else
                             {
-                                NPCNames = NPCNames
-                                    .Concat(GenData.NordNPCNames)
-                                    .Concat(GenData.HumanNPCNames)
-                                    .Concat(GenData.BeastNPCNames)
-                                    .Concat(GenData.ElfNPCNames)
-                                    .Concat(GenData.OrcNPCNames)
-                                    .Concat(GenData.DwemerNPCNames)
-                                    .ToList();
+                                NPCNames.AddRange(GenData.NordNPCNames);
+                                NPCNames.AddRange(GenData.HumanNPCNames);
+                                NPCNames.AddRange(GenData.BeastNPCNames);
+                                NPCNames.AddRange(GenData.ElfNPCNames);
+                                NPCNames.AddRange(GenData.OrcNPCNames);
+                                NPCNames.AddRange(GenData.DwemerNPCNames);
                             }
                         }
                         // create a new book
@@ -397,13 +399,15 @@ namespace Hephaestus
                         book.PickUpSound = new FormLinkNullable<ISoundDescriptorGetter>(
                             Skyrim.SoundDescriptor.ITMNoteUp.FormKey
                         );
-                        book.Keywords = new Noggog.ExtendedList<IFormLinkGetter<IKeywordGetter>>();
-                        book.Keywords.Add(Skyrim.Keyword.VendorItemRecipe);
+                        book.Keywords = new Noggog.ExtendedList<IFormLinkGetter<IKeywordGetter>>
+                        {
+                            Skyrim.Keyword.VendorItemRecipe
+                        };
 
                         string frontPage =
                             $"<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]";
 
-                        string otherConditions = String.Empty;
+                        string otherConditions = string.Empty;
 
                         if (cobj.Conditions.Count > 0)
                         {
@@ -430,34 +434,19 @@ namespace Hephaestus
                         switch (objType)
                         {
                             case "Armor":
-                                congregatedFlavourText = GenData
-                                    .flavourText
-                                    .Concat(GenData.ArmorflavourText)
-                                    .ToList();
+                                congregatedFlavourText.AddRange(GenData.ArmorflavourText);
                                 break;
                             case "Weapon":
-                                congregatedFlavourText = GenData
-                                    .flavourText
-                                    .Concat(GenData.WeaponflavourText)
-                                    .ToList();
+                                congregatedFlavourText.AddRange(GenData.WeaponflavourText);
                                 break;
                             case "Shield":
-                                congregatedFlavourText = GenData
-                                    .flavourText
-                                    .Concat(GenData.ShieldflavourText)
-                                    .ToList();
+                                congregatedFlavourText.AddRange(GenData.ShieldflavourText);
                                 break;
                             case "Cooking":
-                                congregatedFlavourText = GenData
-                                    .flavourText
-                                    .Concat(GenData.CookingflavourText)
-                                    .ToList();
+                                congregatedFlavourText.AddRange(GenData.CookingflavourText);
                                 break;
                             case "Jewelry":
-                                congregatedFlavourText = GenData
-                                    .flavourText
-                                    .Concat(GenData.JewelryflavourText)
-                                    .ToList();
+                                congregatedFlavourText.AddRange(GenData.JewelryflavourText);
                                 break;
                         }
 
@@ -483,7 +472,7 @@ namespace Hephaestus
                             Console.WriteLine("-----------------------");
                             Console.WriteLine(book.BookText);
                             Console.WriteLine("-----------------------");
-                            Console.WriteLine(String.Empty);
+                            Console.WriteLine(string.Empty);
                         }
 
                         // Add player made schematic
@@ -561,19 +550,17 @@ namespace Hephaestus
                         itemToFragmentCOBJ.CreatedObject =
                             new FormLinkNullable<IConstructibleGetter>(bookFragment.FormKey);
 
-                        itemToFragmentCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>();
-                        itemToFragmentCOBJ
-                            .Items
-                            .Add(
-                                new ContainerEntry()
+                        itemToFragmentCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>
+                        {
+                            new ContainerEntry()
+                            {
+                                Item = new ContainerItem()
                                 {
-                                    Item = new ContainerItem()
-                                    {
-                                        Item = new FormLink<IItemGetter>(createdItem.FormKey),
-                                        Count = 1
-                                    },
-                                }
-                            );
+                                    Item = new FormLink<IItemGetter>(createdItem.FormKey),
+                                    Count = 1
+                                },
+                            }
+                        };
 
                         itemToFragmentCOBJ.WorkbenchKeyword = new FormLinkNullable<IKeywordGetter>(
                             cobj.WorkbenchKeyword.FormKey
@@ -622,19 +609,17 @@ namespace Hephaestus
                             bookPlayer.FormKey
                         );
 
-                        bookCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>();
-                        bookCOBJ
-                            .Items
-                            .Add(
-                                new ContainerEntry()
+                        bookCOBJ.Items = new Noggog.ExtendedList<ContainerEntry>
+                        {
+                            new ContainerEntry()
+                            {
+                                Item = new ContainerItem()
                                 {
-                                    Item = new ContainerItem()
-                                    {
-                                        Item = new FormLink<IItemGetter>(bookFragment.FormKey),
-                                        Count = (int)noteToSchematicRatio
-                                    },
-                                }
-                            );
+                                    Item = new FormLink<IItemGetter>(bookFragment.FormKey),
+                                    Count = (int)noteToSchematicRatio
+                                },
+                            }
+                        };
                         bookCOBJ.WorkbenchKeyword = new FormLinkNullable<IKeywordGetter>(
                             cobj.WorkbenchKeyword.FormKey
                         );
@@ -668,7 +653,7 @@ namespace Hephaestus
                             Console.WriteLine("-----------------------");
                             Console.WriteLine(bookFragment.BookText);
                             Console.WriteLine("-----------------------");
-                            Console.WriteLine(String.Empty);
+                            Console.WriteLine(string.Empty);
                         }
                     }
                     else
@@ -826,7 +811,7 @@ namespace Hephaestus
 
                         if (settings.ShowDebugLogs)
                         {
-                            Console.WriteLine(String.Empty);
+                            Console.WriteLine(string.Empty);
                             Console.WriteLine(
                                 $"Patching tempering COBJs to require new schematics ..."
                             );
@@ -926,7 +911,7 @@ namespace Hephaestus
 
                 if (settings.ShowDebugLogs)
                 {
-                    Console.WriteLine(String.Empty);
+                    Console.WriteLine(string.Empty);
                     Console.WriteLine($"Patching LVLIs to include new schematics ...");
                 }
 
@@ -938,6 +923,13 @@ namespace Hephaestus
                             .LinkCache
                             .TryResolve<ILeveledItemGetter>(lvliFormKey, out var leveledList)
                         && leveledList?.Entries == null
+                    )
+                        continue;
+
+                    // Skip non-whitelisted LVLIs
+                    if (
+                        !lootLVLIWhitelist.Contains(lvliFormKey)
+                        && !settings.LVLIWhitelist.Contains(leveledList)
                     )
                         continue;
 
@@ -960,7 +952,7 @@ namespace Hephaestus
                     if (!bookLVLIs.ContainsKey(itemBOOK[createdItemFormKey]))
                         bookLVLIs.Add(
                             itemBOOK[createdItemFormKey],
-                            new Dictionary<String, FormKey>()
+                            new Dictionary<string, FormKey>()
                         );
 
                     if (!bookLVLIs[itemBOOK[createdItemFormKey]].ContainsKey(leveledItemIDTemplate))
@@ -969,8 +961,10 @@ namespace Hephaestus
                         schematicLVLI = state.PatchMod.LeveledItems.AddNew();
                         schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
                         schematicLVLI.EditorID = leveledItemIDTemplate;
-                        schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
-                        schematicLVLI.Entries.Add(bookEntry);
+                        schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>
+                        {
+                            bookEntry
+                        };
                         bookLVLIs[itemBOOK[createdItemFormKey]].Add(
                             schematicLVLI.EditorID,
                             schematicLVLI.FormKey
@@ -997,7 +991,7 @@ namespace Hephaestus
 
                     if (settings.ShowDebugLogs)
                     {
-                        Console.WriteLine(String.Empty);
+                        Console.WriteLine(string.Empty);
                         Console.WriteLine(
                             $"    Injecting {schematicLVLI.EditorID} in {leveledList.EditorID}"
                         );
@@ -1063,7 +1057,7 @@ namespace Hephaestus
                 if (!overflownFormkeys.ContainsKey(createdItemFormKey))
                     continue;
 
-                Console.WriteLine(String.Empty);
+                Console.WriteLine(string.Empty);
                 Console.WriteLine($"oopsie doopsie uwu too many items in this leveled list");
 
                 if (
@@ -1126,7 +1120,7 @@ namespace Hephaestus
                 }
             }
 
-            Console.WriteLine(String.Empty);
+            Console.WriteLine(string.Empty);
             Console.WriteLine("=================================================");
         }
     }
