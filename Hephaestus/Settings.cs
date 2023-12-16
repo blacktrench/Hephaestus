@@ -13,13 +13,13 @@ namespace Hephaestus
             FormLinkGetter<IKeywordGetter>.Null;
 
         [SynthesisSettingName("The name of the crafting furniture")]
-        public string objBenchName { get; set; } = String.Empty;
+        public string objBenchName { get; set; } = string.Empty;
 
         [SynthesisSettingName("The name of the process")]
-        public string processName { get; set; } = String.Empty;
+        public string processName { get; set; } = string.Empty;
 
         [SynthesisSettingName("The name of the schematic item")]
-        public string schematicTypeName { get; set; } = String.Empty;
+        public string schematicTypeName { get; set; } = string.Empty;
     }
 
     public class Settings
@@ -83,8 +83,8 @@ namespace Hephaestus
         )]
         public bool distributeSpecial { get; set; } = true;
 
-        [SynthesisSettingName("Add schematics to general loot?")]
-        public bool distributeGeneralLoot { get; set; } = true;
+        [SynthesisSettingName("Add schematics to some general loot?")]
+        public bool distributeGeneralLoot { get; set; } = false;
 
         [SynthesisSettingName("Add custom lists to distribute schematics to")]
         [SynthesisTooltip(
@@ -99,7 +99,7 @@ namespace Hephaestus
         [SynthesisTooltip(
             "Any name added here is added to the pool of names that get used when generating the looted schematics"
         )]
-        public List<String> LovedOnesName { get; set; } = new();
+        public List<string> LovedOnesName { get; set; } = new();
 
         [SynthesisSettingName("(Debug) Show patched item info")]
         public bool ShowDebugLogs { get; set; } = false;
