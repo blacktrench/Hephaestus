@@ -8,12 +8,6 @@ using Mutagen.Bethesda.Synthesis;
 
 namespace Hephaestus
 {
-    // To do
-    // Find a way to break down items without losing them (for artifacts and the like, maybe make a item to fragment cobj option that looks for a specific level in smithing?)
-    // Maybe add a merchant option to trainers/blacksmiths that lets you buy schematics?
-    // copy keywords from primary cobj to book/fragment cobj
-    // make notes be per material per part (steel harness, orcish blade, leather handle, etc)
-
     public class Program
     {
         static Lazy<Settings> _settings = null!;
@@ -382,8 +376,9 @@ namespace Hephaestus
                                 NPCNames.AddRange(GenData.DwemerNPCNames);
                             }
                         }
+
                         // create a new book
-                        book = state.PatchMod.Books.AddNew();
+                        book = state.PatchMod.Books.AddNew(objEditorID);
 
                         // Set the book properties
                         book.EditorID = $"{objEditorID}_{schematicType}";
@@ -478,7 +473,7 @@ namespace Hephaestus
                         // Add player made schematic
 
                         // create a new book
-                        bookPlayer = state.PatchMod.Books.AddNew();
+                        bookPlayer = state.PatchMod.Books.AddNew(objEditorID);
 
                         // Set the book properties
                         bookPlayer.EditorID = $"{book.EditorID}_Player";
@@ -512,7 +507,7 @@ namespace Hephaestus
                         itemBOOKPlayer.Add(createdItem.FormKey, bookPlayer.FormKey);
 
                         // create a new book fragment
-                        bookFragment = state.PatchMod.Books.AddNew();
+                        bookFragment = state.PatchMod.Books.AddNew(book.EditorID);
                         string counter = $"about {noteToSchematicRatio} times";
 
                         // Set the fragment properties
