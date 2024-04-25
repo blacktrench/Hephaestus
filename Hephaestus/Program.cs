@@ -378,10 +378,9 @@ namespace Hephaestus
                         }
 
                         // create a new book
-                        book = state.PatchMod.Books.AddNew(objEditorID);
+                        book = state.PatchMod.Books.AddNew($"{objEditorID}_{schematicType}");
 
                         // Set the book properties
-                        book.EditorID = $"{objEditorID}_{schematicType}";
                         book.Name = $"{objType} {schematicType}: {objName}";
                         book.Description =
                             $"A {schematicType.ToLower()} created by {NPCNames[random.Next(NPCNames.Count)]}. It details the process of {processNameCont} {aAn}{objName}.";
@@ -473,10 +472,9 @@ namespace Hephaestus
                         // Add player made schematic
 
                         // create a new book
-                        bookPlayer = state.PatchMod.Books.AddNew(objEditorID);
+                        bookPlayer = state.PatchMod.Books.AddNew($"{book.EditorID}_Player");
 
                         // Set the book properties
-                        bookPlayer.EditorID = $"{book.EditorID}_Player";
                         bookPlayer.Name = book.Name;
                         bookPlayer.Description =
                             $"A {schematicType.ToLower()} created by me. It details the process of {processNameCont} {aAn}{objName}.";
@@ -507,11 +505,10 @@ namespace Hephaestus
                         itemBOOKPlayer.Add(createdItem.FormKey, bookPlayer.FormKey);
 
                         // create a new book fragment
-                        bookFragment = state.PatchMod.Books.AddNew(book.EditorID);
+                        bookFragment = state.PatchMod.Books.AddNew($"{book.EditorID}_Fragment");
                         string counter = $"about {noteToSchematicRatio} times";
 
                         // Set the fragment properties
-                        bookFragment.EditorID = $"{book.EditorID}_Fragment";
                         bookFragment.Name = $"{schematicType} notes on {objName}";
                         bookFragment.Description =
                             $"Notes made on the {processNameCont} of {aAn}{objName}.";
@@ -539,9 +536,8 @@ namespace Hephaestus
                         itemBOOKFragment.Add(createdItem.FormKey, bookFragment.FormKey);
 
                         // Create COBJ item -> fragment
-                        var itemToFragmentCOBJ = state.PatchMod.ConstructibleObjects.AddNew();
+                        var itemToFragmentCOBJ = state.PatchMod.ConstructibleObjects.AddNew($"{objEditorID}_Breakdown_Recipe");
 
-                        itemToFragmentCOBJ.EditorID = $"{objEditorID}_Breakdown_Recipe";
                         itemToFragmentCOBJ.CreatedObject =
                             new FormLinkNullable<IConstructibleGetter>(bookFragment.FormKey);
 
@@ -597,9 +593,8 @@ namespace Hephaestus
                             );
 
                         // Create COBJ fragment -> book
-                        var bookCOBJ = state.PatchMod.ConstructibleObjects.AddNew();
+                        var bookCOBJ = state.PatchMod.ConstructibleObjects.AddNew($"{objEditorID}_{schematicType}_Recipe");
 
-                        bookCOBJ.EditorID = $"{objEditorID}_{schematicType}_Recipe";
                         bookCOBJ.CreatedObject = new FormLinkNullable<IConstructibleGetter>(
                             bookPlayer.FormKey
                         );
@@ -953,15 +948,14 @@ namespace Hephaestus
                     if (!bookLVLIs[itemBOOK[createdItemFormKey]].ContainsKey(leveledItemIDTemplate))
                     {
                         // Create leveled list for each item with a user customizable drop chance
-                        schematicLVLI = state.PatchMod.LeveledItems.AddNew();
+                        schematicLVLI = state.PatchMod.LeveledItems.AddNew(leveledItemIDTemplate);
                         schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
-                        schematicLVLI.EditorID = leveledItemIDTemplate;
                         schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>
                         {
                             bookEntry
                         };
                         bookLVLIs[itemBOOK[createdItemFormKey]].Add(
-                            schematicLVLI.EditorID,
+                            schematicLVLI.EditorID!, // We know it's not null
                             schematicLVLI.FormKey
                         );
                     }
