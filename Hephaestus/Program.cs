@@ -569,6 +569,7 @@ namespace Hephaestus
                             itemToFragmentCOBJ.Items.Count;
 
                         // Add conditions (so it doesn't clutter the menu)
+                        // Check we have at least one of the item we're breaking down
                         var itemToFragmentCOBJCond = new GetItemCountConditionData()
                         {
                             RunOnType = Condition.RunOnType.Reference,
@@ -591,6 +592,49 @@ namespace Hephaestus
                                     Data = itemToFragmentCOBJCond,
                                 }
                             );
+
+                        // Make sure we don't have enough fragments to make a book
+                        var notEnoughFragmentsCond = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        notEnoughFragmentsCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            notEnoughFragmentsCond,
+                            bookFragment.FormKey
+                        );
+                        notEnoughFragmentsCond.ItemOrList.Link.SetTo(bookFragment);
+
+                        itemToFragmentCOBJ.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = noteToSchematicRatio,
+                                CompareOperator = CompareOperator.LessThan,
+                                Data = notEnoughFragmentsCond,
+                            }
+                        );
+
+                        // Make sure we haven't crafted the book yet
+                        var notHaveBookCond = new GetItemCountConditionData()
+                        {
+                            RunOnType = Condition.RunOnType.Reference,
+                            Reference = Skyrim.PlayerRef,
+                        };
+                        notHaveBookCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                            notHaveBookCond,
+                            book.FormKey
+                        );
+                        notHaveBookCond.ItemOrList.Link.SetTo(bookPlayer);
+
+                        itemToFragmentCOBJ.Conditions.Add(
+                            new ConditionFloat()
+                            {
+                                ComparisonValue = 1,
+                                CompareOperator = CompareOperator.LessThan,
+                                Data = notHaveBookCond,
+                            }
+                        );
+
 
                         // Create COBJ fragment -> book
                         var bookCOBJ = state.PatchMod.ConstructibleObjects.AddNew($"{objEditorID}_{schematicType}_Recipe");
