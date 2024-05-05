@@ -389,7 +389,7 @@ namespace Hephaestus
                         book.Description =
                             $"A {schematicType.ToLower()} created by {NPCNames[random.Next(NPCNames.Count)]}. It details the process of {processNameCont} {aAn}{objName}.";
                         book.Value = objValue * (noteToSchematicRatio + 2);
-                        book.Weight = 0.25f;
+                        book.Weight = settings.schematicWeight;
                         book.Model = GenData.bookModelLib[bookModelSetKey];
                         book.InventoryArt = new FormLinkNullable<IStaticGetter>(bookStatic);
                         book.ObjectBounds = bookStatic.ObjectBounds.DeepCopy();
@@ -521,7 +521,7 @@ namespace Hephaestus
                                 Math.Round(objValue / ((double)noteToSchematicRatio * 1.2)),
                                 1
                             );
-                        bookFragment.Weight = 0.1f;
+                        bookFragment.Weight = settings.fragmentWeight;
                         bookFragment.Model = GenData.bookFragmentModelLib[bookFragmentModelSetKey];
                         bookFragment.InventoryArt = new FormLinkNullable<IStaticGetter>(
                             bookFragmentStatic

@@ -105,6 +105,12 @@ namespace Hephaestus
         )]
         public List<string> LovedOnesName { get; set; } = new();
 
+        [SynthesisSettingName("Weight of schematic fragments")]
+        public float fragmentWeight { get; set; } = 0.1f;
+
+        [SynthesisSettingName("Weight of schematic books.")]
+        public float schematicWeight { get; set; } = 0.25f;
+
         [SynthesisSettingName("(Debug) Show patched item info")]
         public bool ShowDebugLogs { get; set; } = false;
     }
