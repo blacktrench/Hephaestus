@@ -80,6 +80,10 @@ namespace Hephaestus
                 if (createdItem is not IWeightValueGetter && createdItem is not IWeaponGetter)
                     continue;
 
+                // Skip if the workbench is blacklisted
+                if (settings.BenchSettings.Any(e => e.BenchKeyword.FormKey == baseCOBJ.WorkbenchKeyword.FormKey && e.ignore))
+                    continue;
+
                 // Check if there are any LVLIs that this item is present in
                 foreach (
                     var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
