@@ -20,9 +20,6 @@ namespace Hephaestus
 
         [SynthesisSettingName("The name of the schematic item")]
         public string schematicTypeName { get; set; } = string.Empty;
-
-        [SynthesisSettingName("Do not modify any recipes that use this keyword")]
-        public bool ignore { get; set; } = false;
     }
 
     public class Settings
@@ -47,8 +44,7 @@ namespace Hephaestus
                     BenchKeyword = Skyrim.Keyword.CraftingTanningRack,
                     objBenchName = "Tanning Rack",
                     processName = "stitch",
-                    schematicTypeName = "Pattern",
-                    ignore = true
+                    schematicTypeName = "Pattern"
                 },
                 new BaseSettings()
                 {
