@@ -53,6 +53,14 @@ namespace Hephaestus
             Console.WriteLine("Building cache ...");
             Console.WriteLine(string.Empty);
 
+            // Set of all form keys that appear as entries in leveled lists
+            var lvliReachable = state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
+                .Where(lvli => lvli.Entries != null)
+                .SelectMany(lvli => lvli.Entries!)
+                .Select(entry => entry.Data?.Reference.FormKey)
+                .Where(key => key != null)
+                .ToHashSet();
+
             // Enumerate through COBJs and save the data for later for the items that have names and values, for which the COBJ has a whitelisted keyword and which are present in at least one leveled list
             foreach (
                 IConstructibleObjectGetter baseCOBJ in state
@@ -81,6 +89,13 @@ namespace Hephaestus
                     continue;
 
                 // Check if there are any LVLIs that this item is present in
+                // TODO: We need itemLVLIs later so we can't skip this entirely
+                // For now, pre-calculate which items are not in any LVLIs to skip them
+                // Should be a decent performance improvement
+                if (!lvliReachable.Contains(createdItem.FormKey))
+                    continue;
+
+
                 foreach (
                     var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
                 )
@@ -617,14 +632,14 @@ namespace Hephaestus
                         ConditionFloat CreateNotHaveBookCondition(Book book)
                         {
                             var data = new GetItemCountConditionData()
-                        {
-                            RunOnType = Condition.RunOnType.Reference,
-                            Reference = Skyrim.PlayerRef,
-                        };
+                            {
+                                RunOnType = Condition.RunOnType.Reference,
+                                Reference = Skyrim.PlayerRef,
+                            };
                             data.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
                                 data,
-                            book.FormKey
-                        );
+                                book.FormKey
+                            );
                             data.ItemOrList.Link.SetTo(book);
 
                             return new ConditionFloat()
@@ -633,7 +648,7 @@ namespace Hephaestus
                                 CompareOperator = CompareOperator.LessThan,
                                 Data = data,
                             };
-                            }
+                        }
 
                         // Make sure we haven't crafted the book yet
                         // or found one in loot
