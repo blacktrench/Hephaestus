@@ -614,27 +614,31 @@ namespace Hephaestus
                             }
                         );
 
-                        // Make sure we haven't crafted the book yet
-                        var notHaveBookCond = new GetItemCountConditionData()
+                        ConditionFloat CreateNotHaveBookCondition(Book book)
+                        {
+                            var data = new GetItemCountConditionData()
                         {
                             RunOnType = Condition.RunOnType.Reference,
                             Reference = Skyrim.PlayerRef,
                         };
-                        notHaveBookCond.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
-                            notHaveBookCond,
+                            data.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(
+                                data,
                             book.FormKey
                         );
-                        notHaveBookCond.ItemOrList.Link.SetTo(bookPlayer);
+                            data.ItemOrList.Link.SetTo(book);
 
-                        itemToFragmentCOBJ.Conditions.Add(
-                            new ConditionFloat()
+                            return new ConditionFloat()
                             {
                                 ComparisonValue = 1,
                                 CompareOperator = CompareOperator.LessThan,
-                                Data = notHaveBookCond,
+                                Data = data,
+                            };
                             }
-                        );
 
+                        // Make sure we haven't crafted the book yet
+                        // or found one in loot
+                        itemToFragmentCOBJ.Conditions.Add(CreateNotHaveBookCondition(book));
+                        itemToFragmentCOBJ.Conditions.Add(CreateNotHaveBookCondition(bookPlayer));
 
                         // Create COBJ fragment -> book
                         var bookCOBJ = state.PatchMod.ConstructibleObjects.AddNew($"{objEditorID}_{schematicType}_Recipe");
