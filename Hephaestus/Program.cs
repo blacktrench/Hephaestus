@@ -54,12 +54,25 @@ namespace Hephaestus
             Console.WriteLine(string.Empty);
 
             // Set of all form keys that appear as entries in leveled lists
-            var lvliReachable = state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
-                .Where(lvli => lvli.Entries != null)
-                .SelectMany(lvli => lvli.Entries!)
-                .Select(entry => entry.Data?.Reference.FormKey)
-                .Where(key => key != null)
+
+            var cobjProducts = state.LoadOrder.PriorityOrder.ConstructibleObject().WinningOverrides()
+                .Where(cobj => cobj.Items != null)
+                .SelectMany(cobj => cobj.Items!)
+                .Select(item => item.Item.Item.FormKey)
                 .ToHashSet();
+
+            foreach (var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()) {
+                if (baseLVLI.Entries == null)
+                    continue;
+                foreach (var entry in baseLVLI.Entries) {
+                    if (entry.Data != null && cobjProducts.Contains(entry.Data.Reference.FormKey)) {
+                        if (!itemLVLIs.ContainsKey(entry.Data.Reference.FormKey))
+                            itemLVLIs.Add(entry.Data.Reference.FormKey, new List<FormKey>());
+                        if (!itemLVLIs[entry.Data.Reference.FormKey].Contains(baseLVLI.FormKey))
+                            itemLVLIs[entry.Data.Reference.FormKey].Add(baseLVLI.FormKey);
+                    }
+                }
+            }
 
             // Enumerate through COBJs and save the data for later for the items that have names and values, for which the COBJ has a whitelisted keyword and which are present in at least one leveled list
             foreach (
@@ -87,30 +100,6 @@ namespace Hephaestus
                 // Skip if item value can't be grabbed
                 if (createdItem is not IWeightValueGetter && createdItem is not IWeaponGetter)
                     continue;
-
-                // Check if there are any LVLIs that this item is present in
-                // TODO: We need itemLVLIs later so we can't skip this entirely
-                // For now, pre-calculate which items are not in any LVLIs to skip them
-                // Should be a decent performance improvement
-                if (!lvliReachable.Contains(createdItem.FormKey))
-                    continue;
-
-
-                foreach (
-                    var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()
-                )
-                {
-                    if (baseLVLI.Entries == null)
-                        continue;
-                    if (baseLVLI.Entries.Any(e => e.Data?.Reference.FormKey == createdItem.FormKey))
-                    {
-                        if (!itemLVLIs.ContainsKey(createdItem.FormKey))
-                            itemLVLIs.Add(createdItem.FormKey, new List<FormKey>());
-
-                        if (!itemLVLIs[createdItem.FormKey].Contains(baseLVLI.FormKey))
-                            itemLVLIs[createdItem.FormKey].Add(baseLVLI.FormKey);
-                    }
-                }
 
                 // if no relevant LVLIs, skip item early
                 if (!itemLVLIs.ContainsKey(createdItem.FormKey))
@@ -412,6 +401,15 @@ namespace Hephaestus
                         {
                             Skyrim.Keyword.VendorItemRecipe
                         };
+                        // Copy keywords from the original item to the generated books
+                        // so that they can be sold to blacksmiths
+                        if (createdItemKeywords.Keywords != null)
+                        {
+                            foreach (var keyword in createdItemKeywords.Keywords)
+                            {
+                                book.Keywords.Add(keyword.FormKey);
+                            }
+                        }
 
                         string frontPage =
                             $"<p align='center'>\n\n\n{objName} {schematicType}\n\n\n\n</p>\n[pagebreak]";
