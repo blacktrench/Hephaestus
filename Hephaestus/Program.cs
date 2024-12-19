@@ -56,9 +56,7 @@ namespace Hephaestus
             // Set of all form keys that appear as entries in leveled lists
 
             var cobjProducts = state.LoadOrder.PriorityOrder.ConstructibleObject().WinningOverrides()
-                .Where(cobj => cobj.Items != null)
-                .SelectMany(cobj => cobj.Items!)
-                .Select(item => item.Item.Item.FormKey)
+                .Select(cobj => cobj.CreatedObject.FormKey)
                 .ToHashSet();
 
             foreach (var baseLVLI in state.LoadOrder.PriorityOrder.LeveledItem().WinningOverrides()) {
