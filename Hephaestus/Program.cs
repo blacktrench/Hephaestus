@@ -1007,15 +1007,16 @@ namespace Hephaestus
                     if (!bookLVLIs[itemBOOK[createdItemFormKey]].ContainsKey(leveledItemIDTemplate))
                     {
                         // Create leveled list for each item with a user customizable drop chance
-                        schematicLVLI = state.PatchMod.LeveledItems.AddNew(leveledItemIDTemplate);
-                        schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
-                        schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>
-                        {
-                            bookEntry
-                        };
-                        bookLVLIs[itemBOOK[createdItemFormKey]].Add(
-                            schematicLVLI.EditorID!, // We know it's not null
-                            schematicLVLI.FormKey
+                        schematicLVLI = state.PatchMod.LeveledItems.AddNew();
+						schematicLVLI.ChanceNone = new Noggog.Percent(100 - settings.DropChance);
+						schematicLVLI.EditorID = leveledItemIDTemplate;
+						schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>
+						{
+							bookEntry
+						};
+						bookLVLIs[itemBOOK[createdItemFormKey]].Add(
+							schematicLVLI.EditorID,
+							schematicLVLI.FormKey
                         );
                     }
                     else
