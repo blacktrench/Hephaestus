@@ -975,7 +975,7 @@ namespace Hephaestus
                     {
                         // Create leveled list for each item with a user customizable drop chance
                         schematicLVLI = state.PatchMod.LeveledItems.AddNew();
-                        schematicLVLI.ChanceNone = (byte)(100 - settings.DropChance);
+                        schematicLVLI.ChanceNone = new Percent((100 - settings.DropChance) / 100.0);
                         schematicLVLI.EditorID = leveledItemIDTemplate;
                         schematicLVLI.Entries = new Noggog.ExtendedList<LeveledItemEntry>
                         {
