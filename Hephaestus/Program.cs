@@ -1,4 +1,5 @@
 using System.Text;
+using Noggog;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Plugins;
